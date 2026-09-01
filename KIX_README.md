@@ -12,17 +12,21 @@ Python com tipos e visual gerados automaticamente.
 ## Quickstart
 
 ```bash
-pip install -r Kix/requirements.txt        # Kivy 2.3.1, pytest
-python3 -m pytest tests/ -q                # roda a suíte (~222 testes)
-python3 -m Kix.main                        # abre o app
+pip install -r Kix/requirements.txt        # Kivy 2.3.1, Pillow, pytest
+python3 -m pytest tests/ -q                # roda a suíte (239 testes)
+python3 -m Kix.main                        # abre o app Kivy
+python3 -m Kix.cli demo --png out.png      # roda o projeto demo sem display
+python3 -m Kix.cli run projeto.kix --png out.png
 ```
 
-## Estado atual (M5)
+## Estado atual (M6)
 
 - 320+ blocos em 22 categorias (fórmula, sensors, hardware, gestos, dados, etc.)
 - UI Kivy com Dashboard + Editor (5 abas) + execução real
 - Executor + decorator + serialização de projetos
-- 222 testes passando
+- **CLI runner + renderizador PNG** (M6): roda projetos `.kix` headless,
+  desenha o palco para PNG via Pillow — testável sem display.
+- 239 testes passando
 
 ## Estrutura
 

@@ -5,19 +5,21 @@ Engine de programação visual mobile-first em Python + Kivy. Inspirada em
 blocos universal — uma única classe `KixBlock` cobre todos os blocos, e
 usuários podem criar blocos em Python com o decorator `@kix_block`.
 
-Estado atual: **M5** (UI funcional + execução real + 320+ blocos).
+Estado atual: **M6** (CLI runner + renderizador PNG + 320+ blocos).
 
 ## Quickstart
 
 ```bash
 git clone <repo> kix
 cd kix
-pip install -r Kix/requirements.txt        # Kivy 2.3.1, pytest
-python3 -m pytest tests/ -q                # roda a suíte (deve passar)
+pip install -r Kix/requirements.txt        # Kivy 2.3.1, Pillow, pytest
+python3 -m pytest tests/ -q                # roda a suíte (239 testes)
 python3 -m Kix.main                        # abre o app
+python3 -m Kix.cli demo --png out.png      # roda o demo sem display
 ```
 
-> Requer Python 3.11+, Kivy 2.3.1, display OpenGL (X11/Wayland/Windows/macOS).
+> Requer Python 3.11+, Kivy 2.3.1, Pillow, display OpenGL (X11/Wayland/Windows/macOS)
+> para o app; o CLI runner **funciona sem display**.
 > Para Android: empacotar com Buildozer (fora deste marco).
 
 ## Estrutura
@@ -50,7 +52,7 @@ Kix/
   (posição, rotação, tamanho, opacidade) é salvo após cada execução e
   restaurado na próxima.
 
-### Engine (real, testada — 222 testes)
+### Engine (real, testada — 239 testes)
 
 - **320+ blocos** em 22 categorias (Catroid-aligned).
 - **Decorator `@kix_block`** para criar blocos novos em Python:
@@ -70,6 +72,20 @@ Kix/
 - **SelfBinding**: `self.x = ...` resolve para input → sprite → ctx.
 - **Scripts aninhados**: `control.repeat`/`forever`/`if`/`when_receive`
   aceitam `body=[block_dict, ...]` e rodam recursivamente.
+
+### CLI runner (M6) — testável sem display
+
+```bash
+python3 -m Kix.cli demo --png out.png        # roda projeto demo → PNG
+python3 -m Kix.cli run projeto.kix --png out.png --json out.json
+python3 -m Kix.cli make-demo demo.kix        # gera projeto demo
+python3 -m Kix.cli list-blocks               # lista os 320+ blocos
+```
+
+- Carrega `.kix` (JSON), monta `RuntimeContext`, executa blocos sequencialmente.
+- Renderiza o palco (fundo + sprite rotacionado com tint/opacidade) para PNG.
+- Emite estado final (sprite + variáveis + erros) em JSON.
+- Perfeito para CI e para testar o engine em servidor sem GPU.
 
 ### Categorias de blocos (resumo)
 
@@ -93,18 +109,26 @@ Kix/
 
 ```bash
 # testes
-python3 -m pytest tests/ -q                  # roda tudo (~0.5s)
+python3 -m pytest tests/ -q                              # roda tudo (~0.5s)
 python3 -m pytest tests/test_m5_expansion.py -v
+python3 -m pytest tests/test_m6_cli_runner.py -v         # CLI runner + PNG
 
 # UI
-python3 -m Kix.main                          # abre o app
-KIX_USER_DATA=./tmp python3 -m Kix.main      # custom user data dir
+python3 -m Kix.main                                      # abre o app
+KIX_USER_DATA=./tmp python3 -m Kix.main                  # custom user data dir
+
+# CLI runner (M6) — testa sem display
+python3 -m Kix.cli --help
+python3 -m Kix.cli demo --png out.png
+python3 -m Kix.cli run projeto.kix --png out.png --json out.json
+python3 -m Kix.cli make-demo demo.kix
+python3 -m Kix.cli list-blocks
 
 # Inspecionar blocos
 python3 -c "from Kix.blocks.builtin import ALL; print(f'{len(ALL)} blocos')"
 ```
 
-## O que **NÃO** está implementado (fora do escopo M5)
+## O que **NÃO** está implementado (fora do escopo M6)
 
 Funcionalidades Catroid que continuam como stubs honestos ou não cobertas:
 
@@ -116,8 +140,8 @@ Funcionalidades Catroid que continuam como stubs honestos ou não cobertas:
 - **Locais (i18n)** — só PT-BR.
 - **Cloud variables** — variáveis sincronizadas com servidor.
 - **Undo/Redo** — não tem.
-- **Drag-and-drop de blocos para dentro do body de `if`/`repeat`** — bodies
-  ficam como lista vazia até uma UI de nesting ser construída (M6).
+- **Editor visual de nesting** — bodies de `if`/`repeat` funcionam via CLI/JSON
+  mas o canvas não tem drag-and-drop para inserir blocos no body.
 - **Gamepad externo** (somente touch/joystick virtual).
 - **Buildozer / APK Android** — requer ambiente separado.
 
@@ -133,6 +157,9 @@ quando invocado, em vez de mentir sobre funcionar.
 - **M5**: 320+ blocos (fórmula, sensors, hardware, gestos, dados,
   storage expandido), UI refinada (filtro de categoria, edição de inputs,
   reordenação, reset sprite), executor com scripts aninhados.
+- **M6**: CLI runner (`python3 -m Kix.cli`) + renderizador PNG do palco
+  via Pillow. Permite testar projetos `.kix` sem display — saídas em PNG
+  e JSON. Sub-comandos: `run`, `demo`, `make-demo`, `list-blocks`.
 
 ## Licença
 
