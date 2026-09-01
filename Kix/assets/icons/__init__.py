@@ -1,0 +1,1 @@
+"""Assets estáticos (ícones, fontes, imagens)."""

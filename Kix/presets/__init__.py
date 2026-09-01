@@ -1,0 +1,1 @@
+"""Presets reutilizáveis de projetos."""

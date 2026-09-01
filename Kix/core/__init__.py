@@ -1,0 +1,1 @@
+"""Núcleo da aplicação: app, tema, paths, navegação."""
