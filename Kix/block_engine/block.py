@@ -61,6 +61,7 @@ class KixBlock:
     outputs: list[SocketDef] = field(default_factory=list)
     behavior: "BlockBehavior | None" = None
     permissions: set[str] = field(default_factory=set)
+    is_hat: bool = False              # M7: formato hat (topo convexo) — usado por eventos
 
     def __post_init__(self) -> None:
         if not self.id:
@@ -84,6 +85,7 @@ class KixBlock:
                         for s in self.outputs],
             "behavior": self.behavior.to_dict() if self.behavior else None,
             "permissions": sorted(self.permissions),
+            "is_hat": self.is_hat,
         }
 
     @classmethod
@@ -108,4 +110,5 @@ class KixBlock:
                      for s in data.get("outputs", [])],
             behavior=behavior,
             permissions=set(data.get("permissions", [])),
+            is_hat=bool(data.get("is_hat", False)),
         )

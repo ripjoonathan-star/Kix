@@ -7,6 +7,11 @@ Valores RGBA no formato aceito pelo Kivy (0.0 a 1.0).
 # --- Ações / destaque -------------------------------------------------------
 EMERALD = (0.063, 0.725, 0.506, 1)            # #10B981
 EMERALD_PRESSED = (0.050, 0.580, 0.405, 1)    # versão mais escura para :state=down
+LAVANDA = (0.706, 0.659, 0.878, 1)            # #B4A8DF — Pocket Code Editor FABs
+LAVANDA_PRESSED = (0.580, 0.530, 0.760, 1)
+LARANJA = (1.0, 0.596, 0.0, 1)                # #FF9800 — Pocket Code Categorias FABs
+LARANJA_PRESSED = (0.85, 0.50, 0.0, 1)
+CYAN_TAB = (0.659, 0.878, 0.941, 1)           # #A8E0F0 — Scripts/Looks/Sounds selecionado
 
 # --- Superfícies (escala grafite) -------------------------------------------
 BG = (0.051, 0.051, 0.055, 1)                 # #0D0D0E  fundo da janela

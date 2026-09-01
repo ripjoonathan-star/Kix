@@ -161,6 +161,7 @@ WHEN_CLONE_START = KixBlock(
     name="Quando eu começar como clone",
     category="control",
     color=CAT_CONTROL,
+    is_hat=True,
     visual=BlockVisual(root=Group(children=[Text("Quando eu começar como clone"), BlockInput("body")])),
     inputs=[SocketDef("body", SocketKind.BLOCK)],
     outputs=[],

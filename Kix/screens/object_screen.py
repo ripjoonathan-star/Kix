@@ -148,8 +148,25 @@ class ObjectScreen(Screen):
         self._current_tab: str = "scripts"
         self._tab_buttons: dict[str, _TabButton] = {}
         self._contents: dict[str, BoxLayout] = {}
+        self._object_id: str = ""        # setado por ScreenManager.go(... object_id=...)
 
         self._build()
+
+    def on_enter(self, *_):
+        """Resolve o objeto via ScreenManager.editor ao entrar."""
+        if self._object_id and self._object is None:
+            from Kix.core.app import KixApp
+            from Kix.core.screen_manager import ScreenManager
+
+            app = KixApp.get_running_app()
+            sm = app.root
+            if isinstance(sm, ScreenManager):
+                editor = sm.get_screen(ScreenManager.EDITOR)
+                if editor is not None and editor.project is not None:
+                    for o in editor.project.objects:
+                        if o.id == self._object_id:
+                            self.load_object(o)
+                            break
 
     # --- build -----------------------------------------------------------
     def _build(self) -> None:
@@ -284,6 +301,26 @@ class ObjectScreen(Screen):
     # --- API pública ------------------------------------------------------
     def load_object(self, obj: KixObject) -> None:
         self._object = obj
+        # atualiza o título do topbar com o nome do objeto
+        try:
+            topbar = self.children[0].children[0]
+            for child in topbar.children:
+                if isinstance(child, Label) and child.bold:
+                    child.text = obj.name
+                    break
+        except Exception:
+            pass
+
+    def set_background(self) -> None:
+        """Configura a tela para mostrar o fundo (cenário), não um objeto."""
+        try:
+            topbar = self.children[0].children[0]
+            for child in topbar.children:
+                if isinstance(child, Label) and child.bold:
+                    child.text = "Fundo"
+                    break
+        except Exception:
+            pass
 
     def set_tab(self, key: str) -> None:
         if key not in self._tab_buttons:
@@ -294,7 +331,18 @@ class ObjectScreen(Screen):
         self._render_content()
 
     def _on_add(self) -> None:
-        # Stub: M8 terá dialog de adicionar Script/Look/Sound
+        # Se aba Scripts ativa: navega para CategoriasScreen.
+        # Senão: stub M8 (adicionar Look/Sound).
+        if self._current_tab == "scripts":
+            from Kix.core.app import KixApp
+            from Kix.core.screen_manager import ScreenManager
+
+            app = KixApp.get_running_app()
+            sm = app.root
+            if isinstance(sm, ScreenManager):
+                sm.go(ScreenManager.CATEGORIAS)
+            return
+        # looks/sounds: stub
         from kivy.clock import Clock
         Clock.schedule_once(lambda *_: None, 0)
 

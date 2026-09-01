@@ -17,6 +17,7 @@ from Kix.blocks import (
     AI,
     AUDIO_ADV,
     CONTROL,
+    EVENTS,
     FORMULA_BLOCKS,
     GESTURES_BLOCKS,
     HARDWARE_BLOCKS,
@@ -67,6 +68,7 @@ EXPECTED = {
     "NOTIFICATIONS": (NOTIFICATIONS, 3),
     "ARVR": (ARVR, 3),
     "LAYERS": (LAYERS, 19),  # 19 layer blocks (criar/remover/reordenar/visibility/colisão/shader/...)
+    "EVENTS": (EVENTS, 11),  # 8 hat-blocks + 3 broadcast (Pocket Code event blocks)
 }
 
 

@@ -87,30 +87,24 @@ def test_objetos_tab_module():
     assert "_ObjectRow" in classes
 
 
-def test_editor_uses_objetos_tab_not_simples_for_objetos():
-    """EditorScreen usa ObjetosTab para a aba 'objetos' (não mais SimplesTab)."""
+def test_editor_uses_pocket_code_navigation_not_tab_bar():
+    """M7 Pocket Code: EditorScreen não usa mais tab bar inferior — navegação real."""
     text = (Path(__file__).parent.parent / "Kix/screens/editor.py").read_text()
-    # importa ObjetosTab
-    assert "tabs.objetos" in text
-    # E o branch elif name == "objetos" usa ObjetosTab
-    tree = ast.parse(text)
-    for node in ast.walk(tree):
-        if isinstance(node, ast.If):
-            test_src = ast.unparse(node.test).strip()
-            if test_src == "'objetos'":
-                body_src = ast.unparse(node)
-                assert "ObjetosTab" in body_src
-                assert "SimplesTab" not in body_src
+    # Não tem mais a lógica de tabs (Programação/Palco/etc)
+    assert "tabs.objetos" not in text
+    # Navega via ScreenManager.OBJECT
+    assert "ScreenManager.OBJECT" in text
+    assert "_open_object" in text
 
 
-def test_editor_exposes_sm_helper():
-    """EditorScreen tem método _sm() que retorna ScreenManager."""
+def test_editor_exposes_open_object_method():
+    """EditorScreen tem método _open_object(obj) que navega para ObjectScreen."""
     text = (Path(__file__).parent.parent / "Kix/screens/editor.py").read_text()
     tree = ast.parse(text)
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef) and node.name == "EditorScreen":
             methods = [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
-            assert "_sm" in methods
+            assert "_open_object" in methods
 
 
 # --- Fluxo end-to-end: criar objeto + mochila -----------------------------

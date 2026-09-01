@@ -15,6 +15,8 @@ from Kix.screens.dashboard import DashboardScreen
 from Kix.screens.editor import EditorScreen
 from Kix.screens.formula_editor import FormulaEditorScreen
 from Kix.screens.object_screen import ObjectScreen
+from Kix.screens.categorias import CategoriasScreen
+from Kix.screens.categoria import CategoriaScreen
 
 
 class KixApp(App):
@@ -47,9 +49,22 @@ class KixApp(App):
             on_done=_formula_done,
         )
 
+        def _categorias_back():
+            sm.go(ScreenManager.OBJECT)
+
+        categorias = CategoriasScreen(
+            name=ScreenManager.CATEGORIAS,
+        )
+
+        categoria = CategoriaScreen(
+            name=ScreenManager.CATEGORIA,
+        )
+
         sm.add_widget(editor)
         sm.add_widget(object_screen)
         sm.add_widget(formula)
+        sm.add_widget(categorias)
+        sm.add_widget(categoria)
         return sm
 
     def on_start(self) -> None:

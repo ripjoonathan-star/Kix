@@ -114,6 +114,7 @@ from Kix.blocks.sensors import SENSORS                       # noqa: E402
 from Kix.blocks.hardware import HARDWARE_BLOCKS              # noqa: E402
 from Kix.blocks.gestures import GESTURES_BLOCKS             # noqa: E402
 from Kix.blocks.layer import LAYERS                          # noqa: E402
+from Kix.blocks.event import EVENTS                          # noqa: E402
 
 ALL = (CORE
        + TRANSFORMS
@@ -138,7 +139,8 @@ ALL = (CORE
        + SENSORS
        + HARDWARE_BLOCKS
        + GESTURES_BLOCKS
-       + LAYERS)
+       + LAYERS
+       + EVENTS)
 
 __all__ = [
     "MOVE", "SAY", "WAIT", "COMPUTE",
