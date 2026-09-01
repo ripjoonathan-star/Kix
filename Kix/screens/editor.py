@@ -199,12 +199,8 @@ class EditorScreen(Screen):
             from Kix.screens.tabs.palco import PalcoTab
             tab = PalcoTab(screen=self)
         elif name == "objetos":
-            from Kix.screens.tabs.simples import SimplesTab
-            tab = SimplesTab(
-                screen=self,
-                title="Objetos",
-                subtitle="Lista de objetos do projeto (em breve).",
-            )
+            from Kix.screens.tabs.objetos import ObjetosTab
+            tab = ObjetosTab(screen=self)
         elif name == "recursos":
             from Kix.screens.tabs.simples import SimplesTab
             tab = SimplesTab(
@@ -232,6 +228,17 @@ class EditorScreen(Screen):
         sm = app.root
         if isinstance(sm, ScreenManager):
             sm.go(ScreenManager.DASHBOARD)
+
+    def _sm(self):
+        """Helper para a aba Objetos acessar o ScreenManager."""
+        from Kix.core.app import KixApp
+        from Kix.core.screen_manager import ScreenManager
+
+        app = KixApp.get_running_app()
+        sm = app.root
+        if isinstance(sm, ScreenManager):
+            return sm
+        return None
 
     def _run_script(self) -> None:
         """Dispara a execução do programa na aba Palco."""

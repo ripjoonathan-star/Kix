@@ -1,13 +1,11 @@
 """DashboardScreen — primeira tela do app.
 
-Layout:
-- KixAppBar ("Kix")
+Layout Pocket Code:
+- KixAppBar ("Kix") com kebab menu (⋮) canto direito
 - ScrollView com:
-    * label "Projeto mais recente" (se houver)
-    * RecentProjectCard (último modificado)
     * label "Projetos"
-    * lista de ProjectCards
-- FAB "+" canto inferior direito (cria projeto)
+    * lista de ProjectCards (sem "Projeto mais recente" — match Pocket Code)
+- FAB "+" canto inferior direito (cria projeto → NewProjectDialog)
 
 Dados vêm do `ProjectManager`. Tap em um card abre o `EditorScreen`
 carregando o projeto correspondente.
@@ -22,9 +20,7 @@ from kivy.metrics import dp
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen
-from kivy.uix.textinput import TextInput
 
 from Kix.core.theme import (
     EMERALD,
@@ -35,9 +31,10 @@ from Kix.core.theme import (
     TEXT_MED,
 )
 from Kix.projects.manager import ProjectManager
+from Kix.screens.new_project import NewProjectDialog
 from Kix.ui.app_bar import KixAppBar
-from Kix.ui.button import IconButton, KixButton
-from Kix.ui.card import ProjectCard, RecentProjectCard
+from Kix.ui.button import IconButton
+from Kix.ui.card import ProjectCard
 
 Builder.load_string("""
 <DashboardScreen>:
@@ -99,17 +96,7 @@ class DashboardScreen(Screen):
             content.add_widget(self._empty_state())
             return
 
-        content.add_widget(self._section_label("Projeto mais recente"))
-        recent = infos[0]
-        recent_card = RecentProjectCard(
-            name=recent.name,
-            modified=_humanize_modified(recent.modified_at),
-        )
-        recent_card.edit_btn.bind(on_release=lambda *_: self._open_editor(recent.name))
-        recent_card.bind(on_touch_down=self._make_touch_open(recent_card, recent.name))
-        content.add_widget(recent_card)
-
-        content.add_widget(self._spacer())
+        # Pocket Code: só lista "Projetos", sem "Projeto mais recente".
         content.add_widget(self._section_label("Projetos"))
         for info in infos:
             card = ProjectCard(
@@ -121,67 +108,27 @@ class DashboardScreen(Screen):
 
     # --- criação ----------------------------------------------------------
     def _show_new_project_popup(self) -> None:
-        box = BoxLayout(orientation="vertical", padding=dp(20), spacing=dp(16))
-        title = Label(
-            text="Novo projeto",
-            font_size="18sp",
-            color=(0.93, 0.93, 0.95, 1),
-            halign="left",
-            size_hint_y=None,
-            height=dp(28),
-        )
-        title.bind(size=lambda i, _: setattr(i, "text_size", i.size))
-        box.add_widget(title)
+        """Abre o diálogo "Criar Jogo" (estilo Pocket Code)."""
 
-        name_input = TextInput(
-            hint_text="Nome do projeto",
-            multiline=False,
-            background_color=SURFACE_3,
-            foreground_color=(0.93, 0.93, 0.95, 1),
-            hint_text_color=TEXT_LOW,
-            cursor_color=EMERALD,
-            padding=[dp(12), dp(12), dp(12), dp(12)],
-            font_size="16sp",
-        )
-        box.add_widget(name_input)
-
-        btns = BoxLayout(size_hint_y=None, height=dp(48), spacing=dp(12))
-        cancel = KixButton(text="Cancelar")
-        create = KixButton(text="Criar", primary=True)
-        btns.add_widget(cancel)
-        btns.add_widget(create)
-        box.add_widget(btns)
-
-        popup = Popup(
-            title="",
-            content=box,
-            size_hint=(0.85, None),
-            height=dp(220),
-            background_color=SURFACE_2,
-            separator_height=0,
-            auto_dismiss=True,
-        )
-
-        def _cancel(*_):
-            popup.dismiss()
-
-        def _create(*_):
-            name = (name_input.text or "").strip()
-            if not name:
-                return
+        def _on_create(name: str, settings) -> None:
             try:
-                self._manager.create(name)
+                self._manager.create(name, settings=settings)
             except FileExistsError:
-                name_input.hint_text = "Já existe — escolha outro nome"
-                name_input.text = ""
+                # Mantém o popup aberto em caso de duplicidade
                 return
-            popup.dismiss()
+            if self._dlg is not None and self._dlg.parent is not None:
+                self._dlg.parent.remove_widget(self._dlg)
+            self._dlg = None
             self.refresh()
 
-        cancel.bind(on_release=_cancel)
-        create.bind(on_release=_create)
-        name_input.bind(on_text_validate=_create)
-        popup.open()
+        def _on_cancel() -> None:
+            if self._dlg is not None and self._dlg.parent is not None:
+                self._dlg.parent.remove_widget(self._dlg)
+            self._dlg = None
+
+        self._dlg = NewProjectDialog(on_create=_on_create, on_cancel=_on_cancel)
+        # Anexa como overlay por cima de tudo no Screen.
+        self.add_widget(self._dlg)
 
     # --- helpers ----------------------------------------------------------
     def _empty_state(self) -> BoxLayout:

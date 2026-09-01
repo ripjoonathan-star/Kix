@@ -83,11 +83,27 @@ class ProjectManager:
         return self._path_for(name).exists()
 
     # --- Create / Save / Load ---------------------------------------------
-    def create(self, name: str, *, template: KixProject | None = None) -> KixProject:
-        """Cria projeto novo. Falha se nome já existir."""
+    def create(
+        self,
+        name: str,
+        *,
+        template: KixProject | None = None,
+        settings: "ProjectSettings | None" = None,
+    ) -> KixProject:
+        """Cria projeto novo. Falha se nome já existir.
+
+        Se `settings` for passado, sobrescreve `ProjectSettings` do projeto
+        (usado pelo diálogo "Criar Jogo" para aplicar versão/orientação/share).
+        """
+        from Kix.projects.model import ProjectSettings
+
         target = self._safe_overwrite_target(name)
         project = template or KixProject(name=name)
         project.name = name
+        if settings is not None:
+            project.settings = ProjectSettings.from_dict(
+                {**project.settings.to_dict(), **settings.to_dict()}
+            )
         self.save(project)
         return project
 

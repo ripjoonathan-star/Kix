@@ -14,6 +14,8 @@ class ScreenManager(_KivySM):
 
     DASHBOARD = "dashboard"
     EDITOR = "editor"
+    OBJECT = "object"
+    FORMULA = "formula"
 
     def go(self, name: str, **options) -> None:
         """Transiciona para a tela nomeada."""

@@ -27,20 +27,29 @@ class ProjectSettings:
     width: int = 390
     height: int = 844
     orientation: str = "portrait"          # "portrait" | "landscape"
+    version: str = "1.0.0"
+    share_link: bool = False
 
     def to_dict(self) -> dict:
         return {
             "width": self.width,
             "height": self.height,
             "orientation": self.orientation,
+            "version": self.version,
+            "share_link": self.share_link,
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> "ProjectSettings":
+        orientation = data.get("orientation", "portrait")
+        if orientation not in ("portrait", "landscape"):
+            orientation = "portrait"
         return cls(
             width=int(data.get("width", 390)),
             height=int(data.get("height", 844)),
-            orientation=data.get("orientation", "portrait"),
+            orientation=orientation,
+            version=str(data.get("version", "1.0.0")),
+            share_link=bool(data.get("share_link", False)),
         )
 
 
@@ -96,6 +105,7 @@ class KixScene:
     name: str = "Cena"
     background: str = "#FFFFFF"
     objects: list[str] = field(default_factory=list)   # ids de KixObject
+    layers: list[str] = field(default_factory=list)    # ids de KixLayer
 
     def to_dict(self) -> dict:
         return {
@@ -103,6 +113,7 @@ class KixScene:
             "name": self.name,
             "background": self.background,
             "objects": list(self.objects),
+            "layers": list(self.layers),
         }
 
     @classmethod
@@ -111,6 +122,54 @@ class KixScene:
             id=data.get("id") or _new_id("scn"),
             name=data.get("name", "Cena"),
             background=data.get("background", "#FFFFFF"),
+            objects=list(data.get("objects", [])),
+            layers=list(data.get("layers", [])),
+        )
+
+
+@dataclass
+class KixLayer:
+    """Camada que agrupa objetos na cena com categoria (ui, background, ...).
+
+    `z_index` define a ordem de renderização (maior = na frente).
+    `visible` esconde/exibe a layer sem remover objetos.
+    `collidable` define se objetos dessa layer participam de detecção de colisão.
+    """
+
+    id: str = field(default_factory=lambda: _new_id("lyr"))
+    name: str = "Layer"
+    category: str = "other"            # "ui" | "background" | "player" | "enemy" | "other"
+    z_index: int = 0
+    visible: bool = True
+    collidable: bool = True
+    shader: str = ""                   # nome do shader aplicado ("" = sem)
+    objects: list[str] = field(default_factory=list)   # ids de KixObject
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "category": self.category,
+            "z_index": self.z_index,
+            "visible": self.visible,
+            "collidable": self.collidable,
+            "shader": self.shader,
+            "objects": list(self.objects),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "KixLayer":
+        category = data.get("category", "other")
+        if category not in ("ui", "background", "player", "enemy", "other"):
+            category = "other"
+        return cls(
+            id=data.get("id") or _new_id("lyr"),
+            name=data.get("name", "Layer"),
+            category=category,
+            z_index=int(data.get("z_index", 0)),
+            visible=bool(data.get("visible", True)),
+            collidable=bool(data.get("collidable", True)),
+            shader=str(data.get("shader", "")),
             objects=list(data.get("objects", [])),
         )
 
@@ -123,6 +182,7 @@ class KixProject:
     modified_at: str = field(default_factory=_now_iso)
     scenes: list[KixScene] = field(default_factory=list)
     objects: list[KixObject] = field(default_factory=list)
+    layers: list[KixLayer] = field(default_factory=list)
     scripts: list[KixScript] = field(default_factory=list)
     blocks: list[Any] = field(default_factory=list)         # KixBlock serializados via .to_dict()
     settings: ProjectSettings = field(default_factory=ProjectSettings)
@@ -145,6 +205,7 @@ class KixProject:
             "modified_at": self.modified_at,
             "scenes": [s.to_dict() for s in self.scenes],
             "objects": [o.to_dict() for o in self.objects],
+            "layers": [l.to_dict() for l in self.layers],
             "scripts": [s.to_dict() for s in self.scripts],
             "blocks": [b if isinstance(b, dict) else b.to_dict() for b in self.blocks],
             "settings": self.settings.to_dict(),
@@ -153,6 +214,8 @@ class KixProject:
 
     @classmethod
     def from_dict(cls, data: dict) -> "KixProject":
+        from Kix.projects.model import KixLayer
+
         return cls(
             name=data.get("name", "Sem nome"),
             description=data.get("description", ""),
@@ -160,6 +223,7 @@ class KixProject:
             modified_at=data.get("modified_at") or _now_iso(),
             scenes=[KixScene.from_dict(s) for s in data.get("scenes", [])],
             objects=[KixObject.from_dict(o) for o in data.get("objects", [])],
+            layers=[KixLayer.from_dict(l) for l in data.get("layers", [])],
             scripts=[KixScript.from_dict(s) for s in data.get("scripts", [])],
             blocks=list(data.get("blocks", [])),  # ficam como dicts — caller decide se reconstrói
             settings=ProjectSettings.from_dict(data.get("settings", {})),

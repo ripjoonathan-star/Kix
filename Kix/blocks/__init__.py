@@ -30,6 +30,7 @@ from Kix.blocks.builtin import (
     AI,
     ARVR,
 )
+from Kix.blocks.layer import LAYERS
 
 __all__ = [
     "BUILTINS", "ALL", "CORE",
@@ -40,4 +41,5 @@ __all__ = [
     "AUDIO_ADV", "SCENES", "AI", "STORAGE_BLOCKS",
     "NOTIFICATIONS", "ARVR",
     "FORMULA_BLOCKS", "SENSORS", "HARDWARE_BLOCKS", "GESTURES_BLOCKS",
+    "LAYERS",
 ]

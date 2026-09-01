@@ -113,6 +113,7 @@ from Kix.blocks.formula import FORMULA_BLOCKS                # noqa: E402
 from Kix.blocks.sensors import SENSORS                       # noqa: E402
 from Kix.blocks.hardware import HARDWARE_BLOCKS              # noqa: E402
 from Kix.blocks.gestures import GESTURES_BLOCKS             # noqa: E402
+from Kix.blocks.layer import LAYERS                          # noqa: E402
 
 ALL = (CORE
        + TRANSFORMS
@@ -136,7 +137,8 @@ ALL = (CORE
        + FORMULA_BLOCKS
        + SENSORS
        + HARDWARE_BLOCKS
-       + GESTURES_BLOCKS)
+       + GESTURES_BLOCKS
+       + LAYERS)
 
 __all__ = [
     "MOVE", "SAY", "WAIT", "COMPUTE",
@@ -147,4 +149,5 @@ __all__ = [
     "AUDIO_ADV", "SCENES", "AI", "STORAGE_BLOCKS",
     "NOTIFICATIONS", "ARVR",
     "FORMULA_BLOCKS", "SENSORS", "HARDWARE_BLOCKS", "GESTURES_BLOCKS",
+    "LAYERS",
 ]

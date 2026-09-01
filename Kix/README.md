@@ -103,6 +103,7 @@ python3 -m Kix.cli list-blocks               # lista os 320+ blocos
 | pen             | 8+  | Down, up, color, size, stamp, clear, **move_xy** |
 | physics         | 14  | Walls, raycast, **gravidade** |
 | storage         | 11  | Save/load nomeados, **tipados (number/bool), list_keys, clear, size** |
+| layers          | 19  | **M8**: criar/remover, reordenar (above/swap), visibility (show/hide), colisão (on/off), shader (apply/except/clear), move_object, contagem |
 | + outras 10     |     | tilemap, spritesheet, ui, joystick, particles, scenes, AI, notifications, ar/vr, audio |
 
 ## Comandos úteis
@@ -160,6 +161,19 @@ quando invocado, em vez de mentir sobre funcionar.
 - **M6**: CLI runner (`python3 -m Kix.cli`) + renderizador PNG do palco
   via Pillow. Permite testar projetos `.kix` sem display — saídas em PNG
   e JSON. Sub-comandos: `run`, `demo`, `make-demo`, `list-blocks`.
+- **M7**: Paridade visual Pocket Code — Dashboard sem "Projeto mais recente",
+  diálogo "Criar Jogo" (versão/orientação/share), Editor com app bar
+  Pocket Code, dropdown menu do objeto (Mochila/Copiar/Apagar/Mudar nome/
+  Novo grupo/Nova cena/...), tela do objeto com sub-abas Scripts/Looks/
+  Sounds, tela Categorias (defer), formato hat-block (defer), editor de
+  fórmula com teclado numérico + tokens coloridos + Calcular, mochila
+  persistente (JSON), share link `kix://share/...` (zlib + base64).
+- **M8**: Layers — `KixLayer` dataclass (name, category ui/background/
+  player/enemy/other, z_index, visible, collidable, shader), `LayersProxy`
+  completo (criar/remover/reordenar/visibility/colisão/shader/objetos),
+  19 blocos `layers.*` (layer.create, layer.above, layer.swap,
+  layer.shader_except, layer.collision_on/off, layer.is_visible,
+  layer.contains, etc.).
 
 ## Licença
 

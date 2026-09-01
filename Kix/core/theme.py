@@ -21,19 +21,19 @@ TEXT_HIGH = (0.93, 0.93, 0.95, 1)             # títulos
 TEXT_MED = (0.70, 0.70, 0.74, 1)              # corpo
 TEXT_LOW = (0.45, 0.45, 0.50, 1)              # meta
 
-# --- Paleta por categoria (Catroid-inspired) -------------------------------
-# Cada categoria tem um tom; blocos embutidos referenciam estes.
-CAT_MOTION = (0.20, 0.55, 0.85, 1)
-CAT_LOOKS = (0.45, 0.75, 0.45, 1)
-CAT_SOUND = (0.65, 0.40, 0.85, 1)
-CAT_PEN = (0.35, 0.60, 0.35, 1)
-CAT_CONTROL = (0.95, 0.65, 0.35, 1)
-CAT_EVENT = (0.90, 0.45, 0.20, 1)
-CAT_DATA = (0.95, 0.45, 0.55, 1)
-CAT_DEVICE = (0.65, 0.55, 0.20, 1)
-CAT_FILES = (0.85, 0.70, 0.30, 1)
-CAT_USER = (0.30, 0.35, 0.75, 1)
-CAT_LIBS = (0.95, 0.55, 0.85, 1)
+# --- Paleta por categoria (Pocket Code / Catroid colors, M7) ----------------
+# Cores alinhadas com as screenshots de referência. Cada categoria tem um tom.
+CAT_MOTION = (0.235, 0.553, 0.812, 1)        # Movimento  #3C8DCF
+CAT_LOOKS = (0.404, 0.678, 0.247, 1)         # Aparências  #67AD3F
+CAT_SOUND = (0.608, 0.349, 0.714, 1)         # Som        #9B59B6
+CAT_PEN = (0.247, 0.498, 0.247, 1)           # Caneta     #3F7F3F
+CAT_CONTROL = (0.886, 0.627, 0.388, 1)       # Controle   #E2A063
+CAT_EVENT = (0.659, 0.278, 0.231, 1)         # Evento     #A8473B
+CAT_DATA = (0.886, 0.408, 0.537, 1)          # Dados      #E26889
+CAT_DEVICE = (0.639, 0.561, 0.176, 1)        # Dispositivo #A38F2D
+CAT_FILES = (0.741, 0.718, 0.259, 1)         # Arquivos   #BDB742
+CAT_USER = (0.235, 0.435, 0.898, 1)          # Seus blocos #3C6FE5
+CAT_LIBS = (0.882, 0.561, 0.667, 1)          # Bibliotecas #E18FAA
 CAT_CAMERA = (0.40, 0.70, 0.90, 1)
 CAT_NETWORK = (0.35, 0.60, 0.80, 1)
 CAT_LAYERS = (0.55, 0.55, 0.65, 1)
@@ -53,12 +53,19 @@ CAT_STORAGE = (0.65, 0.65, 0.75, 1)
 CAT_NOTIFICATIONS = (0.95, 0.85, 0.40, 1)
 CAT_ARVR = (0.45, 0.85, 0.85, 1)
 
+# Categorias na ordem que aparecem em Pocket Code (Categorias screen)
+CATEGORY_ORDER = (
+    "event", "control", "motion", "sound", "looks", "pen",
+    "data", "device", "files", "user", "libs",
+)
+
 # --- Espaçamento / geometria ------------------------------------------------
 PADDING = 16
 PADDING_SM = 8
 PADDING_LG = 24
 RADIUS = 14
 RADIUS_SM = 8
+RADIUS_XS = 4
 TOUCH_MIN = 44                               # dp mínimo para alvos de toque
 
 # --- Tipografia -------------------------------------------------------------

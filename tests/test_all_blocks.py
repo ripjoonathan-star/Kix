@@ -21,6 +21,7 @@ from Kix.blocks import (
     GESTURES_BLOCKS,
     HARDWARE_BLOCKS,
     IO,
+    LAYERS,
     MATH_BLOCKS,
     NETWORK,
     NOTIFICATIONS,
@@ -65,6 +66,7 @@ EXPECTED = {
     "AI": (AI, 6),
     "NOTIFICATIONS": (NOTIFICATIONS, 3),
     "ARVR": (ARVR, 3),
+    "LAYERS": (LAYERS, 19),  # 19 layer blocks (criar/remover/reordenar/visibility/colisão/shader/...)
 }
 
 

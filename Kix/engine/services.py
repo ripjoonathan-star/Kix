@@ -196,40 +196,211 @@ class TilemapProxy(_ServiceBase):
 
 @dataclass
 class LayersProxy(_ServiceBase):
-    name: str = "layers"
+    """Gerencia layers da cena (por nome e categoria).
 
-    def create(self, name: str) -> int:
+    Categorias válidas: "ui", "background", "player", "enemy", "other".
+    Layers são dicts internos; o engine expõe `layers[name]` para leitura.
+    """
+
+    name: str = "layers"
+    VALID_CATEGORIES = ("ui", "background", "player", "enemy", "other")
+
+    # --- internos -------------------------------------------------------
+    def _layers(self) -> list[dict]:
+        return self._attrs.setdefault("layers", [])
+
+    def _find_index(self, name: str) -> int:
+        for i, lyr in enumerate(self._layers()):
+            if lyr.get("name") == name:
+                return i
+        return -1
+
+    def _get(self, name: str) -> dict | None:
+        idx = self._find_index(name)
+        if idx < 0:
+            return None
+        return self._layers()[idx]
+
+    # --- API pública ----------------------------------------------------
+    def create(self, name: str, category: str = "other") -> bool:
+        """Cria layer nova. Retorna False se já existe ou categoria inválida."""
+        if category not in self.VALID_CATEGORIES:
+            category = "other"
+        if self._find_index(name) >= 0:
+            return False
+        layers = self._layers()
+        z = max((l.get("z", 0) for l in layers), default=-1) + 1
+        layers.append({
+            "name": name,
+            "category": category,
+            "z": z,
+            "visible": True,
+            "collidable": True,
+            "shader": "",
+            "objects": [],
+        })
+        return True
+
+    def remove(self, name: str) -> bool:
+        for i, lyr in enumerate(self._layers()):
+            if lyr.get("name") == name:
+                self._layers().pop(i)
+                return True
+        return False
+
+    def exists(self, name: str) -> bool:
+        return self._find_index(name) >= 0
+
+    def count(self) -> int:
+        return len(self._layers())
+
+    def current(self) -> str:
+        return str(self._attrs.get("current", ""))
+
+    def switch(self, name: str) -> None:
+        if self._find_index(name) >= 0:
+            self._attrs["current"] = name
+
+    def set_z(self, name: str, z: int) -> None:
+        lyr = self._get(name)
+        if lyr is not None:
+            lyr["z"] = int(z)
+
+    def set_category(self, name: str, category: str) -> None:
+        if category not in self.VALID_CATEGORIES:
+            category = "other"
+        lyr = self._get(name)
+        if lyr is not None:
+            lyr["category"] = category
+
+    def show(self, name: str) -> None:
+        lyr = self._get(name)
+        if lyr is not None:
+            lyr["visible"] = True
+
+    def hide(self, name: str) -> None:
+        lyr = self._get(name)
+        if lyr is not None:
+            lyr["visible"] = False
+
+    def is_visible(self, name: str) -> bool:
+        lyr = self._get(name)
+        return bool(lyr.get("visible", True)) if lyr else False
+
+    def set_collidable(self, name: str, collidable: bool) -> None:
+        lyr = self._get(name)
+        if lyr is not None:
+            lyr["collidable"] = bool(collidable)
+
+    def is_collidable(self, name: str) -> bool:
+        lyr = self._get(name)
+        return bool(lyr.get("collidable", True)) if lyr else False
+
+    def set_shader(self, name: str, shader: str) -> None:
+        lyr = self._get(name)
+        if lyr is not None:
+            lyr["shader"] = str(shader)
+
+    def clear_shader(self, name: str) -> None:
+        self.set_shader(name, "")
+
+    def apply_shader_except(self, shader: str, except_name: str) -> None:
+        """Aplica shader a todas as layers exceto a de nome `except_name`."""
+        for lyr in self._layers():
+            if lyr.get("name") != except_name:
+                lyr["shader"] = str(shader)
+
+    def add_object(self, layer_name: str, object_id: str) -> bool:
+        lyr = self._get(layer_name)
+        if lyr is None:
+            return False
+        if object_id not in lyr["objects"]:
+            lyr["objects"].append(object_id)
+        return True
+
+    def remove_object(self, layer_name: str, object_id: str) -> bool:
+        lyr = self._get(layer_name)
+        if lyr is None:
+            return False
+        if object_id in lyr["objects"]:
+            lyr["objects"].remove(object_id)
+            return True
+        return False
+
+    def object_count(self, name: str) -> int:
+        lyr = self._get(name)
+        return len(lyr.get("objects", [])) if lyr else 0
+
+    def contains_object(self, name: str, object_id: str) -> bool:
+        lyr = self._get(name)
+        return object_id in (lyr.get("objects", []) if lyr else [])
+
+    def clear(self, name: str) -> bool:
+        lyr = self._get(name)
+        if lyr is None:
+            return False
+        lyr["objects"] = []
+        return True
+
+    def swap(self, name_a: str, name_b: str) -> bool:
+        idx_a = self._find_index(name_a)
+        idx_b = self._find_index(name_b)
+        if idx_a < 0 or idx_b < 0:
+            return False
+        layers = self._layers()
+        # troca posição na lista E os valores de z (para que z_index reflita a nova ordem)
+        layers[idx_a], layers[idx_b] = layers[idx_b], layers[idx_a]
+        z_a = layers[idx_a].get("z", 0)
+        z_b = layers[idx_b].get("z", 0)
+        layers[idx_a]["z"] = z_b
+        layers[idx_b]["z"] = z_a
+        return True
+
+    def above(self, name: str, other_name: str) -> None:
+        """Move `name` para imediatamente acima de `other_name` (z maior)."""
+        idx = self._find_index(name)
+        other_idx = self._find_index(other_name)
+        if idx < 0 or other_idx < 0:
+            return
+        lyr = self._layers()[idx]
+        other = self._layers()[other_idx]
+        lyr["z"] = other.get("z", 0) + 1
+
+    def z_index(self, name: str) -> int:
+        lyr = self._get(name)
+        return int(lyr.get("z", 0)) if lyr else -1
+
+    # --- compatibilidade com API antiga baseada em id ------------------
+    def create_index(self, name: str) -> int:
         layers = self._attrs.setdefault("layers", [])
         lid = len(layers)
         layers.append({"name": name, "z": lid, "visible": True})
         return lid
 
-    def switch(self, layer_id: int) -> None:
-        self._attrs["current"] = int(layer_id)
-
-    def current(self) -> int:
-        return int(self._attrs.get("current", 0))
-
-    def set_z(self, layer_id: int, z: int) -> None:
-        layers = self._attrs.setdefault("layers", [])
+    def set_z_by_id(self, layer_id: int, z: int) -> None:
+        layers = self._layers()
         if 0 <= layer_id < len(layers):
             layers[layer_id]["z"] = int(z)
 
-    def show(self, layer_id: int) -> None:
-        layers = self._attrs.setdefault("layers", [])
+    def show_by_id(self, layer_id: int) -> None:
+        layers = self._layers()
         if 0 <= layer_id < len(layers):
             layers[layer_id]["visible"] = True
 
-    def hide(self, layer_id: int) -> None:
-        layers = self._attrs.setdefault("layers", [])
+    def hide_by_id(self, layer_id: int) -> None:
+        layers = self._layers()
         if 0 <= layer_id < len(layers):
             layers[layer_id]["visible"] = False
 
     def forward(self, layer_id: int) -> None:
-        self.set_z(layer_id, self._attrs.get("layers", [[]])[layer_id].get("z", 0) + 1)
+        layers = self._layers()
+        if 0 <= layer_id < len(layers):
+            layers[layer_id]["z"] = layers[layer_id].get("z", 0) + 1
 
     def backward(self, layer_id: int) -> None:
-        self.set_z(layer_id, self._attrs.get("layers", [[]])[layer_id].get("z", 0) - 1)
+        layers = self._layers()
+        if 0 <= layer_id < len(layers):
+            layers[layer_id]["z"] = layers[layer_id].get("z", 0) - 1
 
 
 @dataclass
