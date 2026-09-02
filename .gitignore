@@ -24,3 +24,9 @@ Thumbs.db
 # Beads runtime (config tracked, dolt DB ignored)
 .beads/dolt/
 .beads/state.db
+
+# Local secrets (CodeAgent UI writes here; do NOT commit)
+.env
+.env.local
+*.pem
+credentials*.json
