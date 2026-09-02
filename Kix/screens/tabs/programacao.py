@@ -81,7 +81,7 @@ CATEGORY_LABELS = {
 }
 
 # Chip de categoria — usa Tom secundário (clareado) para não cansar visualmente.
-# Categorias com two-tone canônico (Pocket Code + spec 3.1) usam
+# Categorias com two-tone canônico (Pocket Code + spec 3.1/3.2) usam
 # cat_color(name, 'light'); as demais caem no fallback SURFACE_3.
 def _chip_color(category: str) -> tuple:
     twotone = {
@@ -91,6 +91,10 @@ def _chip_color(category: str) -> tuple:
         # Extras Kix com paleta curada (spec 3.1)
         "physics", "network", "storage", "economy",
         "particles", "ai", "tilemap", "python",
+        # Blocos Extras — categoria unificada para hardware/situacional
+        # (spec 3.2 / regra 6 da seção 5). Sub-categorias abaixo são
+        # mapeadas para este tom único.
+        "extras", "camera", "arvr", "joystick", "notifications",
     }
     if category in twotone:
         return cat_color(category, "light")

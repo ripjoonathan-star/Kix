@@ -97,23 +97,33 @@ CAT_TILEMAP_LIGHT   = (0.659, 0.635, 0.620, 1)   # #A8A29E
 CAT_PYTHON    = (0.216, 0.463, 0.671, 1)   # Python Puro #3776AB (azul Python oficial) — categoria especial (spec 3.3)
 CAT_PYTHON_LIGHT    = (0.435, 0.659, 0.847, 1)   # #6FA8D8
 
+CAT_EXTRAS    = (0.392, 0.455, 0.545, 1)   # Blocos Extras #64748B (cinza-azulado neutro, spec 3.2/5)
+CAT_EXTRAS_LIGHT    = (0.580, 0.639, 0.722, 1)   # #94A3B8
+
+# --- Aliases para sub-categorias que consolidam em "Blocos Extras" ------
+# Spec seção 5 regra 6: "Funcionalidades situacionais/de hardware não
+# viram categoria própria — todas vivem juntas em Blocos Extras".
+# Mantemos os nomes CAT_CAMERA etc. como aliases retro-compatíveis para
+# não quebrar imports em Kix/blocks/*.py.
+
+CAT_CAMERA       = CAT_EXTRAS   # câmera/AR → Blocos Extras
+CAT_JOYSTICK     = CAT_EXTRAS   # joystick (hardware) → Blocos Extras
+CAT_ARVR         = CAT_EXTRAS   # AR/VR → Blocos Extras
+CAT_NOTIFICATIONS = CAT_EXTRAS  # notificações → Blocos Extras
+
 # --- Demais categorias Kix (não constam da spec 3.1; valores mantidos) --
 # Estas continuam com tons placeholder — aguardando spec para cor canônica.
 
 CAT_USER          = (0.30, 0.35, 0.75, 1)
 CAT_LIBS          = (0.95, 0.55, 0.85, 1)
-CAT_CAMERA        = (0.40, 0.70, 0.90, 1)
 CAT_LAYERS        = (0.55, 0.55, 0.65, 1)
 CAT_SHADERS       = (0.75, 0.50, 0.85, 1)
 CAT_UI            = (0.20, 0.55, 0.55, 1)
 CAT_SPRITESHEET   = (0.85, 0.55, 0.35, 1)
-CAT_JOYSTICK      = (0.30, 0.70, 0.60, 1)
 CAT_MATH          = (0.30, 0.65, 0.85, 1)
 CAT_STRINGS       = (0.55, 0.85, 0.75, 1)
 CAT_AUDIO_ADV     = (0.75, 0.55, 0.95, 1)
 CAT_SCENES        = (0.50, 0.65, 0.55, 1)
-CAT_NOTIFICATIONS = (0.95, 0.85, 0.40, 1)
-CAT_ARVR          = (0.45, 0.85, 0.85, 1)
 
 # --- Aliases semânticos (Fase 1A) ----------------------------------------
 # Mapeiam uso → cor. Sobrevivem ao renomeio de SURFACE_* porque o nome da
@@ -170,6 +180,12 @@ _CAT_TABLE: dict[str, tuple[tuple[float, float, float, float], tuple[float, floa
     "ai":        (CAT_AI,        CAT_AI_LIGHT),
     "tilemap":   (CAT_TILEMAP,   CAT_TILEMAP_LIGHT),
     "python":    (CAT_PYTHON,    CAT_PYTHON_LIGHT),
+    # "Blocos Extras" — categoria unificada para hardware/situacional
+    # (GPS, câmera/AR, IoT, acessibilidade, social share, vibração, lanterna).
+    # Spec 3.2 + regra 6 da Seção 5: "Funcionalidades situacionais/de
+    # hardware não viram categoria própria — todas vivem juntas em Blocos
+    # Extras (#64748B)".
+    "extras":    (CAT_EXTRAS,    CAT_EXTRAS_LIGHT),
 }
 
 
