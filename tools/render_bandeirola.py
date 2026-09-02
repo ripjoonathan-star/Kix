@@ -46,6 +46,8 @@ DEMO = [
     ("ai.pathfind",          "Pathfinding para",     "alvo=Player"),
     ("particles.emit",       "Emitir partículas",    "qtd=20, tipo=fogo"),
     ("tilemap.tile_at",      "Tile em linha/col",    "linha=0, col=0"),
+    ("camera.snapshot",      "Tirar foto",           "res=1080p"),
+    ("joystick.move",        "Mover analógico",      "eixo=xy"),
     ("motion.move_xy",       "Mover x/y",            "dx=10, dy=0"),
 ]
 
@@ -149,7 +151,7 @@ def _render_block(
 
 
 def render(out_path: Path) -> None:
-    img_w, img_h = 360, 1100
+    img_w, img_h = 360, 2400
     img = Image.new("RGBA", (img_w, img_h), _rgba_to_int(BG))
     draw = ImageDraw.Draw(img, "RGBA")
 
