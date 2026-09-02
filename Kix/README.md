@@ -20,7 +20,7 @@ python3 -m Kix.cli demo --png out.png      # roda o demo sem display
 
 > Requer Python 3.11+, Kivy 2.3.1, Pillow, display OpenGL (X11/Wayland/Windows/macOS)
 > para o app; o CLI runner **funciona sem display**.
-> Para Android: empacotar com Buildozer (fora deste marco).
+> Para Android: ver `BUILD_ANDROID.md` (buildozer + APK).
 
 ## Estrutura
 
@@ -143,7 +143,7 @@ Funcionalidades Catroid que continuam como stubs honestos ou não cobertas:
 - **Editor visual de nesting** — bodies de `if`/`repeat` funcionam via CLI/JSON
   mas o canvas não tem drag-and-drop para inserir blocos no body.
 - **Gamepad externo** (somente touch/joystick virtual).
-- **Buildozer / APK Android** — requer ambiente separado.
+- **Buildozer / APK Android** — ver `BUILD_ANDROID.md`.
 
 Tudo isso está marcado como `NotImplementedError` ou retorna valores neutros
 quando invocado, em vez de mentir sobre funcionar.
