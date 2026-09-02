@@ -37,6 +37,7 @@ from Kix.block_engine import KixBlock
 from Kix.block_engine.visual import Text as VisualText, BlockInput as VisualInput, Group as VisualGroup
 from Kix.blocks.builtin import ALL as ALL_BLOCKS
 from Kix.core.theme import (
+    BLOCK_CORNER_RADIUS,
     BLOCK_HEIGHT_2_LINES,
     BLOCK_ICON_SIZE,
     BLOCK_MIN_HEIGHT,
