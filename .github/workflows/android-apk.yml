@@ -60,6 +60,11 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install "buildozer==1.5.0" "cython==3.0.10"
 
+      - name: Install Pillow for icon generation
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install Pillow==10.4.0
+
       - name: Generate launcher icon
         run: make icon
 
