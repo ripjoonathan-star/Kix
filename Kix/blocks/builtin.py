@@ -37,6 +37,9 @@ from Kix.blocks.ai import AI                            # noqa: F401
 from Kix.blocks.storage import STORAGE_BLOCKS           # noqa: F401
 from Kix.blocks.notifications import NOTIFICATIONS      # noqa: F401
 from Kix.blocks.arvr import ARVR                        # noqa: F401
+from Kix.blocks.python import PYTHON_BLOCKS             # noqa: F401
+from Kix.blocks.text import TEXT_BLOCKS                 # noqa: F401
+from Kix.blocks.shaders import SHADER_BLOCKS            # noqa: F401
 
 
 # --- Bloco núcleo (M1) ------------------------------------------------------
@@ -136,7 +139,10 @@ ALL = (CORE
        + FORMULA_BLOCKS
        + SENSORS
        + HARDWARE_BLOCKS
-       + GESTURES_BLOCKS)
+       + GESTURES_BLOCKS
+       + PYTHON_BLOCKS
+       + TEXT_BLOCKS
+       + SHADER_BLOCKS)
 
 __all__ = [
     "MOVE", "SAY", "WAIT", "COMPUTE",
@@ -147,4 +153,5 @@ __all__ = [
     "AUDIO_ADV", "SCENES", "AI", "STORAGE_BLOCKS",
     "NOTIFICATIONS", "ARVR",
     "FORMULA_BLOCKS", "SENSORS", "HARDWARE_BLOCKS", "GESTURES_BLOCKS",
+    "PYTHON_BLOCKS", "TEXT_BLOCKS", "SHADER_BLOCKS",
 ]

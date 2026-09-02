@@ -30,6 +30,8 @@ from Kix.core.theme import (
     EMERALD,
     FONT_SIZE_BODY,
     INPUT_BG,
+    MODAL_BG,
+    MODAL_OVERLAY,
     SURFACE_2,
     TEXT_HIGH,
     TEXT_LOW,
@@ -62,8 +64,8 @@ Builder.load_string("""
             glyph: '+'
             primary: True
             size_hint: (None, None)
-            size: dp(56), dp(56)
-            x: root.width - dp(72)
+            size: dp(64), dp(64)
+            x: root.width - dp(80)
             y: dp(32)
             on_release: root._show_new_project_popup()
 """)
@@ -158,7 +160,8 @@ class DashboardScreen(Screen):
             content=box,
             size_hint=(0.85, None),
             height=dp(220),
-            background_color=SURFACE_2,
+            background_color=MODAL_BG,
+            overlay_color=MODAL_OVERLAY,
             separator_height=0,
             auto_dismiss=True,
         )

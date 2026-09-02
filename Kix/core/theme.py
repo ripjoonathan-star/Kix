@@ -97,8 +97,14 @@ CAT_TILEMAP_LIGHT   = (0.659, 0.635, 0.620, 1)   # #A8A29E
 CAT_PYTHON    = (0.216, 0.463, 0.671, 1)   # Python Puro #3776AB (azul Python oficial) — categoria especial (spec 3.3)
 CAT_PYTHON_LIGHT    = (0.435, 0.659, 0.847, 1)   # #6FA8D8
 
+# Texto customizável (M8) — slate-500 neutro, distinto de EXTRAS
+# (#64748B, mais saturado) e TILEMAP (#78716C, warm). Família cinza,
+# temperatura neutra para "formatação de texto".
+CAT_TEXT      = (0.420, 0.447, 0.502, 1)   # Texto #6B7280 (slate-500 neutro)
+CAT_TEXT_LIGHT      = (0.612, 0.639, 0.686, 1)   # #9CA3AF
+
 CAT_EXTRAS    = (0.392, 0.455, 0.545, 1)   # Blocos Extras #64748B (cinza-azulado neutro, spec 3.2/5)
-CAT_EXTRAS_LIGHT    = (0.580, 0.639, 0.722, 1)   # #94A3B8
+CAT_EXTRAS_LIGHT    = (0.612, 0.663, 0.729, 1)   # #9CA9BA
 
 # --- Aliases para sub-categorias que consolidam em "Blocos Extras" ------
 # Spec seção 5 regra 6: "Funcionalidades situacionais/de hardware não
@@ -136,6 +142,7 @@ BUTTON_BG_SECONDARY = SURFACE_1   # KixButton quando não primário
 PRESSED_BG          = SURFACE_4   # estado :down de botão secundário
 HEADER_BG           = SURFACE_2   # app bar / header
 MODAL_BG            = SURFACE_2   # popup / menu contextual
+MODAL_OVERLAY       = (0, 0, 0, 0.7)   # scrim atrás de modal (spec 4)
 ACCORDION_BG        = SURFACE_3   # fundo de seção agrupada
 
 # --- Espaçamento / geometria ---------------------------------------------
@@ -229,6 +236,15 @@ BLOCK_PARAM_UNDERLINE = (1, 1, 1, 0.6)   # rgba(255,255,255,0.6) — sublinhado 
 BLOCK_ICON_OUTLINE    = (1, 1, 1, 0.85)  # rgba(255,255,255,0.85) — contorno único
 BLOCK_SHADOW_DRAG_A   = 0.45     # --block-shadow-dragging  rgba(0,0,0,0.45)
 BLOCK_FONT_SIZE_SP    = "18sp"   # --block-text-size  (spec: 18-19sp; valor central)
+
+# --- 3.3 Code editor (bloco Python Puro) ----------------------------------
+# Coluna fixa de numeração de linha, fonte monoespaçada 14sp, altura
+# mínima 3 linhas (spec: "altura mínima 3 linhas, expansível conforme
+# conteúdo (auto-grow), até CODE_MAX_LINES antes de scrollar).
+CODE_GUTTER_W   = 24         # --code-gutter-width       coluna numeração
+CODE_FONT_SIZE  = "14sp"     # --code-font-size          fonte monoespaçada
+CODE_MIN_LINES  = 3          # --code-min-lines          altura inicial
+CODE_MAX_LINES  = 12         # --code-max-lines          antes do scroll
 
 
 def hex_to_rgba(value: str) -> tuple[float, float, float, float]:

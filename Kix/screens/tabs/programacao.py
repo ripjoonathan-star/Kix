@@ -49,6 +49,7 @@ from Kix.core.theme import (
     FONT_SIZE_META,
     INPUT_BG,
     MODAL_BG,
+    MODAL_OVERLAY,
     PADDING,
     PADDING_SM,
     RADIUS_SM,
@@ -62,6 +63,7 @@ from Kix.core.theme import (
 from Kix.ui.block_render import (
     draw_bandeirola_bg,
     draw_block_icon,
+    draw_python_cobra_icon,
     set_bandeirola_color,
 )
 
@@ -459,6 +461,12 @@ class ProgramacaoTab(BoxLayout):
             return
 
         inputs_meta = bdata.get("inputs", [])
+        # --- Categoria "python" → editor de código dedicado (spec 3.3) ---
+        # Em vez de TextInputs de 1 linha, usa CodeEditor com numeração
+        # de linha, fonte monoespaçada e rodapé "⚙ Variáveis / ▶ Testar".
+        if bdata.get("category") == "python":
+            self._open_python_code_editor(index, bdata)
+            return
         if not inputs_meta:
             # reporter sem input — mostra só "fechar"
             popup = Popup(
@@ -467,6 +475,7 @@ class ProgramacaoTab(BoxLayout):
                 size_hint=(0.8, None),
                 height=dp(120),
                 background_color=MODAL_BG,
+                overlay_color=MODAL_OVERLAY,
                 separator_height=0,
             )
             popup.open()
@@ -532,6 +541,7 @@ class ProgramacaoTab(BoxLayout):
             size_hint=(0.85, None),
             height=dp(60 + 36 * len(inputs_meta) + 24),
             background_color=MODAL_BG,
+            overlay_color=MODAL_OVERLAY,
             separator_height=0,
             auto_dismiss=True,
         )
@@ -552,6 +562,170 @@ class ProgramacaoTab(BoxLayout):
                     sock["default"] = raw.strip().lower() in ("1", "true", "sim", "yes")
                 else:  # STRING, VARIABLE, etc.
                     sock["default"] = raw
+            project.blocks[index] = bdata
+            self.screen.save()
+            popup.dismiss()
+            self._refresh_canvas()
+
+        cancel.bind(on_release=lambda *_: popup.dismiss())
+        save.bind(on_release=_save)
+        popup.open()
+
+    def _open_python_code_editor(self, index: int, bdata: dict) -> None:
+        """Popup especial para blocos ``python.exec`` / ``python.eval``.
+
+        Spec 3.3:
+        - TextInput multilinha com numeração de linha (CodeEditor)
+        - Rodapé com 2 links: "⚙ Variáveis expostas" e "▶ Testar bloco isolado"
+        - Erro → borda pisca ``--danger`` + traceback inline (sem modal)
+        """
+        from Kix.ui.button import KixButton
+        from Kix.ui.code_editor import CodeEditor
+
+        inputs_meta = bdata.get("inputs", [])
+        # Bloco Python sempre tem 1 input: code (exec) ou expr (eval)
+        initial = ""
+        sock_name = "code"
+        if inputs_meta:
+            sock_name = inputs_meta[0].get("name", "code")
+            initial = str(inputs_meta[0].get("default", "") or "")
+
+        editor = CodeEditor(initial=initial)
+        # Lista de variáveis expostas — popula dinamicamente conforme o
+        # objeto onde o bloco está anexado. Spec: "self, sprite, scene,
+        # dt, touch, etc.". Aqui devolvemos o conjunto canônico.
+        editor.set_variables(("self", "sprite", "scene", "dt", "touch"))
+
+        # --- Rodapé (2 links pequenos, EMERALD_300, sem fundo) -----------
+        from Kix.core.theme import EMERALD_300
+        from Kix.ui.button import KixButton as _Btn  # noqa: F811
+
+        footer = BoxLayout(
+            orientation="horizontal",
+            size_hint_y=None,
+            height=dp(28),
+            spacing=dp(16),
+            padding=[0, dp(8), 0, 0],
+        )
+        traceback_label = Label(
+            text="",
+            color=(0.937, 0.267, 0.267, 1),    # DANGER
+            font_size="12sp",
+            halign="left",
+            valign="middle",
+            shorten=True,
+            shorten_from="right",
+        )
+        traceback_label.bind(
+            size=lambda i, _: setattr(i, "text_size", i.size)
+        )
+
+        def _show_variables(*_):
+            """Modal com lista de variáveis expostas."""
+            var_popup = Popup(
+                title="Variáveis expostas",
+                content=BoxLayout(orientation="vertical", padding=dp(16)),
+                size_hint=(0.8, None),
+                height=dp(60 + 28 * len(editor._variables) + 16),
+                background_color=MODAL_BG,
+                overlay_color=MODAL_OVERLAY,
+                separator_height=0,
+            )
+            box = var_popup.content
+            for name in editor._variables:
+                box.add_widget(Label(
+                    text=f"• {name}",
+                    font_size="14sp",
+                    color=TEXT_HIGH,
+                    size_hint_y=None,
+                    height=dp(28),
+                    halign="left",
+                ))
+            close = KixButton(text="Fechar", primary=True)
+            close.bind(on_release=var_popup.dismiss)
+            box.add_widget(close)
+            var_popup.open()
+
+        def _test_isolated(*_):
+            """Stub: executa o código num sandbox mínimo e mostra erro/sucesso.
+
+            Implementação completa (sandbox + namespace restrito + console
+            inline) é responsabilidade do runtime — esta versão só valida
+            sintaxe via ``compile()`` para feedback imediato no editor.
+            """
+            try:
+                compile(editor.text, "<bloco>", "exec")
+            except SyntaxError as e:
+                tb = f"Linha {e.lineno}: {e.msg}"
+                traceback_label.text = tb
+                editor.error_text = tb
+                return
+            traceback_label.text = "✓ Sintaxe OK"
+            editor.error_text = None
+
+        var_btn = KixButton(
+            text="⚙ Variáveis expostas",
+            font_size="12sp",
+            color=EMERALD_300,
+            background_color=(0, 0, 0, 0),
+            background_normal="",
+        )
+        var_btn.color = EMERALD_300
+        var_btn.bind(on_release=_show_variables)
+
+        test_btn = KixButton(
+            text="▶ Testar bloco isolado",
+            font_size="12sp",
+            background_color=(0, 0, 0, 0),
+            background_normal="",
+        )
+        test_btn.color = EMERALD_300
+        test_btn.bind(on_release=_test_isolated)
+
+        footer.add_widget(var_btn)
+        footer.add_widget(test_btn)
+        footer.add_widget(traceback_label)
+
+        # --- Botões Cancelar / Salvar ----------------------------------
+        btns = BoxLayout(
+            size_hint_y=None, height=dp(44), spacing=dp(12)
+        )
+        cancel = KixButton(text="Cancelar")
+        save = KixButton(text="Salvar", primary=True)
+        btns.add_widget(cancel)
+        btns.add_widget(save)
+
+        box = BoxLayout(orientation="vertical", padding=dp(16), spacing=dp(12))
+        title = Label(
+            text=f"Editar bloco #{index + 1} — {bdata.get('name', 'Python')}",
+            font_size="14sp",
+            color=TEXT_HIGH,
+            size_hint_y=None,
+            height=dp(24),
+            halign="left",
+        )
+        title.bind(size=lambda i, _: setattr(i, "text_size", i.size))
+        box.add_widget(title)
+        box.add_widget(editor)
+        box.add_widget(footer)
+        box.add_widget(btns)
+
+        popup = Popup(
+            title="",
+            content=box,
+            size_hint=(0.9, None),
+            # Altura: título (24) + editor (~CODE_MIN_LINES * 1.35 * 14dp + 24)
+            # + footer (28 + 8) + btns (44) + padding (32) + spacing (24)
+            height=dp(180 + 14 * 1.35 * 3 + 24),
+            background_color=MODAL_BG,
+            overlay_color=MODAL_OVERLAY,
+            separator_height=0,
+            auto_dismiss=True,
+        )
+
+        def _save(*_):
+            if inputs_meta:
+                inputs_meta[0]["default"] = editor.text
             project.blocks[index] = bdata
             self.screen.save()
             popup.dismiss()
@@ -728,7 +902,12 @@ class _CanvasRow(ButtonBehavior, BoxLayout):
         s = dp(BLOCK_ICON_SIZE)
         x = dp(BLOCK_PADDING_LEFT)
         y = (self.height - s) / 2
-        draw_block_icon(self, x, y, s, canvas=self.canvas.before)
+        # Spec 3.3: blocos da categoria "python" usam o ícone da cobra
+        # (dois arcos entrelaçados) em vez do ícone genérico de página.
+        if self.block.category == "python":
+            draw_python_cobra_icon(self, x, y, s, canvas=self.canvas.before)
+        else:
+            draw_block_icon(self, x, y, s, canvas=self.canvas.before)
 
     def _on_state(self, *_):
         """Estado :down → cor pressionada (emerald)."""

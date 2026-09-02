@@ -179,6 +179,84 @@ def draw_param_underline(widget, x: float, y: float, width: float) -> None:
         Line(points=[x, y, x + width, y], width=1.5)
 
 
+# --- Ícone "cobra Python" para categoria python (spec seção 3.3) -------
+
+
+def _cubic_bezier_points(p0, p1, p2, p3, n: int = 28) -> list[float]:
+    """Amostra cubic Bezier em n+1 pontos; devolve flat list[float]."""
+    pts: list[float] = []
+    for i in range(n + 1):
+        t = i / n
+        u = 1 - t
+        x = (u**3 * p0[0] + 3 * u**2 * t * p1[0]
+             + 3 * u * t**2 * p2[0] + t**3 * p3[0])
+        y = (u**3 * p0[1] + 3 * u**2 * t * p1[1]
+             + 3 * u * t**2 * p2[1] + t**3 * p3[1])
+        pts.extend([x, y])
+    return pts
+
+
+def draw_python_cobra_icon(
+    widget,
+    x: float,
+    y: float,
+    size: float = 32,
+    canvas=None,
+    color=None,
+) -> None:
+    """Logotipo simplificado da cobra do Python (spec seção 3.3).
+
+    Dois arcos cúbicos entrelaçados formando um padrão simétrico de "8
+    rotacionado" — convenção visual da cobra do Python, simplificada
+    para encaixar no slot 32×32 do bloco. Cada arco termina em uma
+    cabeça (ponto pequeno) reforçando a leitura de "duas cobras".
+
+    Coordenadas: ``(x, y)`` = canto inferior-esquerdo do ícone
+    (convenção Kivy: y cresce para cima). ``size`` é a aresta do quadrado.
+
+    ``color`` opcional — default ``BLOCK_ICON_OUTLINE`` (semelhante aos
+    demais ícones de bloco, mas pode ser customizado para destaque
+    quando o bloco da categoria Python estiver em estado :down).
+    """
+    from kivy.graphics import Ellipse
+
+    s = size
+    ctx = canvas if canvas is not None else widget.canvas
+    stroke = color if color is not None else BLOCK_ICON_OUTLINE
+
+    # Cubic Bezier — arco "cobra A": do canto inf-esq → topo-dir,
+    # passando pelo centro com barriga (control points puxam para fora).
+    snake_a = _cubic_bezier_points(
+        p0=(x + 3,        y + s - 3),    # inf-esq
+        p1=(x + 3,        y + s + 4),    # puxa p/ fora (esq-baixo)
+        p2=(x + s - 3,    y - 4),        # puxa p/ fora (dir-cima)
+        p3=(x + s - 3,    y + 3),        # sup-dir
+    )
+    # Espelho — "cobra B": canto sup-esq → inf-dir, passando pelo centro
+    snake_b = _cubic_bezier_points(
+        p0=(x + 3,        y + 3),        # sup-esq
+        p1=(x + 3,        y - 4),
+        p2=(x + s - 3,    y + s + 4),
+        p3=(x + s - 3,    y + s - 3),    # inf-dir
+    )
+
+    with ctx:
+        Color(*stroke)
+        Line(points=snake_a, width=2.2, cap="round", joint="round")
+        Line(points=snake_b, width=2.2, cap="round", joint="round")
+        # Olhos (cabeças das cobras) — 2 dots pequenos nos topos
+        # das curvas, reforçando a leitura de "duas cobras".
+        eye_r = max(1.5, s * 0.08)
+        Ellipse(
+            pos=(x + s - 4 - eye_r, y + s - 4 - eye_r),
+            size=(eye_r * 2, eye_r * 2),
+        )
+        Ellipse(
+            pos=(x + 2, y + 2),
+            size=(eye_r * 2, eye_r * 2),
+        )
+
+
 # --- Placeholder tracejado (estado de arraste — spec seção 5 regra 8) --
 
 

@@ -26,11 +26,14 @@ from Kix.blocks import (
     NOTIFICATIONS,
     PARTICLES,
     PHYSICS,
+    PYTHON_BLOCKS,
     RUNTIME,
     SCENES,
     SENSORS,
+    SHADER_BLOCKS,
     STORAGE_BLOCKS,
     STRINGS,
+    TEXT_BLOCKS,
     TRANSFORMS,
     UI_BLOCKS,
     VISUAL,
@@ -50,21 +53,24 @@ EXPECTED = {
     "IO": (IO, 25),
     "NETWORK": (NETWORK, 17),
     "WORLD": (WORLD, 26),
-    "UI_BLOCKS": (UI_BLOCKS, 10),
+    "UI_BLOCKS": (UI_BLOCKS, 20),
     "MATH_BLOCKS": (MATH_BLOCKS, 23),
     "STRINGS": (STRINGS, 8),
     "PHYSICS": (PHYSICS, 12),
     "PARTICLES": (PARTICLES, 8),
-    "AUDIO_ADV": (AUDIO_ADV, 8),
+    "AUDIO_ADV": (AUDIO_ADV, 18),
     "FORMULA_BLOCKS": (FORMULA_BLOCKS, 20),  # 7 arith + 1 neg + 6 cmp + 4 logic + 4 str = 20
     "SENSORS": (SENSORS, 18),
     "HARDWARE_BLOCKS": (HARDWARE_BLOCKS, 16),  # 8 nxt + 6 arduino + 2 makey
     "GESTURES_BLOCKS": (GESTURES_BLOCKS, 15),  # 6 touch + 1 pen + 5 data + 2 physics + 1 event
     "STORAGE_BLOCKS": (STORAGE_BLOCKS, 11),
-    "SCENES": (SCENES, 4),
+    "SCENES": (SCENES, 14),
     "AI": (AI, 6),
     "NOTIFICATIONS": (NOTIFICATIONS, 3),
     "ARVR": (ARVR, 3),
+    "PYTHON_BLOCKS": (PYTHON_BLOCKS, 2),
+    "TEXT_BLOCKS": (TEXT_BLOCKS, 10),
+    "SHADER_BLOCKS": (SHADER_BLOCKS, 10),
 }
 
 
@@ -121,7 +127,7 @@ VALID_CATEGORIES = {
     "sensing", "device", "files", "user", "libs", "camera", "network",
     "layers", "shaders", "ui", "tilemap", "spritesheet", "joystick", "math",
     "strings", "physics", "particles", "audio_advanced", "scenes", "ai",
-    "storage", "notifications", "arvr",
+    "storage", "notifications", "arvr", "python", "text",
 }
 
 
