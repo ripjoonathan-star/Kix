@@ -36,6 +36,7 @@ from Kix.block_engine import KixBlock
 from Kix.block_engine.visual import Text as VisualText, BlockInput as VisualInput, Group as VisualGroup
 from Kix.blocks.builtin import ALL as ALL_BLOCKS
 from Kix.core.theme import (
+    BLOCK_HEIGHT_2_LINES,
     BLOCK_ICON_SIZE,
     BLOCK_MIN_HEIGHT,
     BLOCK_PADDING_LEFT,
@@ -103,6 +104,39 @@ def _block_label(block: KixBlock) -> str:
                 parts.append(f"[{child.socket}]")
         return "".join(parts) or block.name
     return block.name
+
+
+def _block_text_only(block: KixBlock) -> str:
+    """Label sem marcadores de input — só o texto da árvore visual.
+
+    Usado na linha 1 do layout 2-linhas (spec 2.2: "rótulo na primeira
+    linha"). Remove os placeholders ``[nome]`` dos BlockInput.
+    """
+    root = block.visual.root
+    if isinstance(root, VisualGroup):
+        parts = []
+        for child in root.children:
+            if isinstance(child, VisualText):
+                parts.append(child.value)
+            # VisualInput não emite texto na linha 1
+        return "".join(parts).strip() or block.name
+    return block.name
+
+
+def _block_params_line(block: KixBlock) -> str:
+    """String compacta descrevendo os parâmetros do texto (linha 2).
+
+    Formato: ``"steps=10, dy=0"``. Para blocos sem inputs → string vazia
+    (o caller deve checar ``block.inputs`` antes de chamar).
+    """
+    if not block.inputs:
+        return ""
+    parts = []
+    for s in block.inputs:
+        label = s.label or s.name
+        val = s.default if s.default is not None else "—"
+        parts.append(f"{label}={val}")
+    return ", ".join(parts)
 
 
 def _blocks_by_category() -> dict[str, list[KixBlock]]:
@@ -588,17 +622,21 @@ class _CanvasRow(ButtonBehavior, BoxLayout):
         self.on_move_down = on_move_down
         self.on_edit = on_edit
         self.size_hint_y = None
-        self.height = dp(BLOCK_MIN_HEIGHT)
+        # 2-line layout quando o bloco tem inputs (spec 2.2):
+        # linha 1 = rótulo, linha 2 = params. Caso contrário 1 linha.
+        self._two_lines = bool(block.inputs)
+        self.height = dp(
+            BLOCK_HEIGHT_2_LINES if self._two_lines else BLOCK_MIN_HEIGHT
+        )
         self.padding = [0, 0, dp(8), 0]
         self._build()
 
     def _build(self) -> None:
         color = _chip_color(self.block.category)
-        amp = dp(BLOCK_WAVE_AMPLITUDE)
         self._orig_color = color
 
         # BoxLayout interno: padding-left = BLOCK_TEXT_START_X (88dp) cria o
-        # respiro à esquerda do label; à direita ficam os botões de ação.
+        # respiro à esquerda; à direita ficam os botões de ação.
         from Kix.ui.button import IconButton
         inner = BoxLayout(
             orientation="horizontal",
@@ -606,18 +644,44 @@ class _CanvasRow(ButtonBehavior, BoxLayout):
             spacing=dp(4),
         )
 
-        # label do bloco (clicável para editar) — esquerda, 18sp, branco
+        # Lado esquerdo: rótulo (1 ou 2 linhas conforme spec 2.2).
+        text_box = BoxLayout(
+            orientation="vertical",
+            spacing=dp(2),
+            padding=[0, dp(4), 0, dp(4)],
+        )
+
+        # Linha 1 — rótulo do bloco (clicável para editar).
         lbl_btn = _LabelButton(
-            text=_block_label(self.block),
+            text=_block_text_only(self.block),
             font_size="18sp",
             color=TEXT_HIGH,
             bold=False,
             halign="left",
             valign="middle",
         )
-        lbl_btn.size_hint_x = 1  # ocupa o espaço entre ícone e botões
+        lbl_btn.size_hint_x = 1
         lbl_btn.bind(on_release=lambda *_: self.on_edit(self.index))
-        inner.add_widget(lbl_btn)
+        text_box.add_widget(lbl_btn)
+
+        # Linha 2 — params com underline (spec 2.2: "parâmetros na
+        # segunda linha @72px do topo, recuo adicional +4px").
+        if self._two_lines:
+            params_text = _block_params_line(self.block)
+            params_btn = _LabelButton(
+                text=params_text,
+                font_size="14sp",
+                color=TEXT_HIGH,
+                bold=False,
+                halign="left",
+                valign="middle",
+            )
+            # +4px recuo adicional (spec 2.2)
+            params_btn.size_hint_x = 1
+            text_box.add_widget(params_btn)
+
+        text_box.size_hint_x = 1
+        inner.add_widget(text_box)
 
         # botões de ação (à direita do label)
         for glyph, cb in (
