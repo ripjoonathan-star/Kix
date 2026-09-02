@@ -29,8 +29,9 @@ from kivy.uix.textinput import TextInput
 from Kix.core.theme import (
     EMERALD,
     FONT_SIZE_BODY,
+    INPUT_BG,
     SURFACE_2,
-    SURFACE_3,
+    TEXT_HIGH,
     TEXT_LOW,
     TEXT_MED,
 )
@@ -125,7 +126,7 @@ class DashboardScreen(Screen):
         title = Label(
             text="Novo projeto",
             font_size="18sp",
-            color=(0.93, 0.93, 0.95, 1),
+            color=TEXT_HIGH,
             halign="left",
             size_hint_y=None,
             height=dp(28),
@@ -136,8 +137,8 @@ class DashboardScreen(Screen):
         name_input = TextInput(
             hint_text="Nome do projeto",
             multiline=False,
-            background_color=SURFACE_3,
-            foreground_color=(0.93, 0.93, 0.95, 1),
+            background_color=INPUT_BG,
+            foreground_color=TEXT_HIGH,
             hint_text_color=TEXT_LOW,
             cursor_color=EMERALD,
             padding=[dp(12), dp(12), dp(12), dp(12)],

@@ -17,7 +17,7 @@ from Kix.block_engine import (
     Text,
 )
 from Kix.block_engine.behavior import BlockBehavior
-from Kix.core.theme import CAT_DEVICE, CAT_PEN, CAT_DATA, CAT_EVENT
+from Kix.core.theme import CAT_DEVICE, CAT_PEN, CAT_DATA, CAT_EVENT, CAT_PHYSICS
 
 
 # ============================================================ Touch / Gestos
@@ -162,7 +162,7 @@ LIST_GET = KixBlock(
 
 # ============================================================ Physics simples
 GRAVITY = KixBlock(
-    id="physics.gravity", name="gravidade", category="physics", color=(0.45, 0.50, 0.85, 1),
+    id="physics.gravity", name="gravidade", category="physics", color=CAT_PHYSICS,
     visual=BlockVisual(root=Group(children=[Text("Gravidade "), BlockInput("g")])),
     inputs=[SocketDef("g", SocketKind.NUMBER, default=9.8)],
     outputs=[],
@@ -170,7 +170,7 @@ GRAVITY = KixBlock(
     permissions={"physics"},
 )
 WALL = KixBlock(
-    id="physics.add_wall", name="adicionar parede", category="physics", color=(0.45, 0.50, 0.85, 1),
+    id="physics.add_wall", name="adicionar parede", category="physics", color=CAT_PHYSICS,
     visual=BlockVisual(root=Group(children=[
         Text("Parede em x="), BlockInput("x"), Text(", y="), BlockInput("y"),
         Text(" de "), BlockInput("w"), Text("×"), BlockInput("h"),

@@ -1,4 +1,4 @@
-"""TopBar custom — título 'Kix' centralizado, fundo grafite."""
+"""TopBar custom — título 'Kix' centralizado, fundo surface-2."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from kivy.metrics import dp
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 
-from Kix.core.theme import FONT_SIZE_TITLE, SURFACE_1, TEXT_HIGH
+from Kix.core.theme import FONT_SIZE_TITLE, HEADER_BG, TEXT_HIGH
 
 Builder.load_string(
     """
@@ -25,7 +25,7 @@ class KixAppBar(BoxLayout):
     def __init__(self, title: str = "Kix", **kwargs):
         super().__init__(orientation="horizontal", **kwargs)
         with self.canvas.before:
-            self._bg = Color(*SURFACE_1)
+            self._bg = Color(*HEADER_BG)
             self._rect = Rectangle(pos=self.pos, size=self.size)
         self.bind(
             pos=lambda i, _: setattr(i._rect, "pos", i.pos),
