@@ -151,9 +151,140 @@ UI_HIDE = KixBlock(
 )
 
 
+# ============================================================ Fast UI (M8 — +10)
+# Helpers rápidos para controles do sistema (status bar, vibração, teclado,
+# orientação). Diferente dos blocos "ui.*" acima (que criam widgets), estes
+# mexem em configurações globais do app — sem necessidade de criar widget.
+UI_STATUS_BAR_SHOW = KixBlock(
+    id="ui.status_bar_show",
+    name="Mostrar barra de status",
+    category="ui",
+    color=CAT_UI,
+    visual=BlockVisual(root=Group(children=[Text("Mostrar barra de status")])),
+    inputs=[],
+    outputs=[],
+    behavior=BlockBehavior(language="python", source="ui.system.show_status_bar()"),
+    permissions={"ui"},
+)
+
+UI_STATUS_BAR_HIDE = KixBlock(
+    id="ui.status_bar_hide",
+    name="Esconder barra de status",
+    category="ui",
+    color=CAT_UI,
+    visual=BlockVisual(root=Group(children=[Text("Esconder barra de status")])),
+    inputs=[],
+    outputs=[],
+    behavior=BlockBehavior(language="python", source="ui.system.hide_status_bar()"),
+    permissions={"ui"},
+)
+
+UI_BLOCK_INPUT = KixBlock(
+    id="ui.block_input",
+    name="Bloquear toque do usuário",
+    category="ui",
+    color=CAT_UI,
+    visual=BlockVisual(root=Group(children=[Text("Bloquear toque do usuário")])),
+    inputs=[],
+    outputs=[],
+    behavior=BlockBehavior(language="python", source="ui.system.input_blocked = True"),
+    permissions={"ui"},
+)
+
+UI_RELEASE_INPUT = KixBlock(
+    id="ui.release_input",
+    name="Liberar toque",
+    category="ui",
+    color=CAT_UI,
+    visual=BlockVisual(root=Group(children=[Text("Liberar toque")])),
+    inputs=[],
+    outputs=[],
+    behavior=BlockBehavior(language="python", source="ui.system.input_blocked = False"),
+    permissions={"ui"},
+)
+
+UI_SHOW_KEYBOARD = KixBlock(
+    id="ui.show_keyboard",
+    name="Mostrar teclado virtual",
+    category="ui",
+    color=CAT_UI,
+    visual=BlockVisual(root=Group(children=[Text("Mostrar teclado virtual")])),
+    inputs=[],
+    outputs=[],
+    behavior=BlockBehavior(language="python", source="ui.system.show_keyboard()"),
+    permissions={"ui"},
+)
+
+UI_HIDE_KEYBOARD = KixBlock(
+    id="ui.hide_keyboard",
+    name="Esconder teclado virtual",
+    category="ui",
+    color=CAT_UI,
+    visual=BlockVisual(root=Group(children=[Text("Esconder teclado virtual")])),
+    inputs=[],
+    outputs=[],
+    behavior=BlockBehavior(language="python", source="ui.system.hide_keyboard()"),
+    permissions={"ui"},
+)
+
+UI_VIBRATE_SHORT = KixBlock(
+    id="ui.vibrate_short",
+    name="Vibrar (curto)",
+    category="ui",
+    color=CAT_UI,
+    visual=BlockVisual(root=Group(children=[Text("Vibrar curto")])),
+    inputs=[],
+    outputs=[],
+    behavior=BlockBehavior(language="python", source="ui.system.vibrate(ms=30)"),
+    permissions={"ui"},
+)
+
+UI_VIBRATE_LONG = KixBlock(
+    id="ui.vibrate_long",
+    name="Vibrar (longo)",
+    category="ui",
+    color=CAT_UI,
+    visual=BlockVisual(root=Group(children=[Text("Vibrar longo")])),
+    inputs=[],
+    outputs=[],
+    behavior=BlockBehavior(language="python", source="ui.system.vibrate(ms=200)"),
+    permissions={"ui"},
+)
+
+UI_ORIENTATION_PORTRAIT = KixBlock(
+    id="ui.orientation_portrait",
+    name="Travar em retrato",
+    category="ui",
+    color=CAT_UI,
+    visual=BlockVisual(root=Group(children=[Text("Travar orientação retrato")])),
+    inputs=[],
+    outputs=[],
+    behavior=BlockBehavior(language="python", source="ui.system.lock_orientation('portrait')"),
+    permissions={"ui"},
+)
+
+UI_ORIENTATION_LANDSCAPE = KixBlock(
+    id="ui.orientation_landscape",
+    name="Travar em paisagem",
+    category="ui",
+    color=CAT_UI,
+    visual=BlockVisual(root=Group(children=[Text("Travar orientação paisagem")])),
+    inputs=[],
+    outputs=[],
+    behavior=BlockBehavior(language="python", source="ui.system.lock_orientation('landscape')"),
+    permissions={"ui"},
+)
+
+
 UI = (UI_CREATE_BUTTON, UI_BUTTON_LABEL, UI_BUTTON_WAS_CLICKED,
       UI_CREATE_SLIDER, UI_SLIDER_VALUE,
       UI_PROGRESS_BAR, UI_PROGRESS_VALUE,
-      UI_CREATE_TEXT, UI_UPDATE_TEXT, UI_HIDE)
+      UI_CREATE_TEXT, UI_UPDATE_TEXT, UI_HIDE,
+      # Fast UI (M8)
+      UI_STATUS_BAR_SHOW, UI_STATUS_BAR_HIDE,
+      UI_BLOCK_INPUT, UI_RELEASE_INPUT,
+      UI_SHOW_KEYBOARD, UI_HIDE_KEYBOARD,
+      UI_VIBRATE_SHORT, UI_VIBRATE_LONG,
+      UI_ORIENTATION_PORTRAIT, UI_ORIENTATION_LANDSCAPE)
 
-assert len(UI) == 10, f"esperado 10, obtido {len(UI)}"
+assert len(UI) == 20, f"esperado 20 (10 base + 10 Fast UI), obtido {len(UI)}"

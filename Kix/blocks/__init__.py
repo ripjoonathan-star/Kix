@@ -29,6 +29,9 @@ from Kix.blocks.builtin import (
     WORLD,
     AI,
     ARVR,
+    PYTHON_BLOCKS,
+    TEXT_BLOCKS,
+    SHADER_BLOCKS,
 )
 
 __all__ = [
@@ -40,4 +43,5 @@ __all__ = [
     "AUDIO_ADV", "SCENES", "AI", "STORAGE_BLOCKS",
     "NOTIFICATIONS", "ARVR",
     "FORMULA_BLOCKS", "SENSORS", "HARDWARE_BLOCKS", "GESTURES_BLOCKS",
+    "PYTHON_BLOCKS", "TEXT_BLOCKS", "SHADER_BLOCKS",
 ]
