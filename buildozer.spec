@@ -22,7 +22,7 @@ version = 0.1.0
 # (list) Application requirements (pip-style).
 # Pinned to avoid p4a recipe mismatches:
 #   python3==3.11.6  matches Kix/README.md "Requer Python 3.11+"
-#   kivy==2.3.1      matches p4a.branch = kivy-2.3.1 below
+#   kivy==2.3.1      matches p4a.branch = develop (latest compatible)
 #   Pillow==10.4.0   matches Kix/requirements.txt floor; used by render/png.py
 #   cython==3.0.10   cython >= 3 breaks Kivy's generated bindings (top buildozer failure)
 requirements = python3==3.11.6, kivy==2.3.1, Pillow==10.4.0, cython==3.0.10
@@ -53,7 +53,7 @@ android.ndk_api = 21
 # network block Kix already references in Kix/blocks/{sensors,hardware,
 # audio_advanced,arvr,io,network,notifications}.py. Runtime permission flow
 # is out of scope while these blocks remain stubs.
-android.permissions = INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, CAMERA, RECORD_AUDIO, NFC, VIBRATE, BLUETOOTH, BLUETOOTH_ADMIN, BLUETOOTH_CONNECT, BLUETOOTH_SCAN, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE
+android.permissions = INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, CAMERA, RECORD_AUDIO, NFC, VIBRATE, BLUETOOTH, BLUETOOTH_ADMIN, BLUETOOTH_CONNECT, BLUETOOTH_SCAN, READ_EXTERNAL_STORA[...]
 
 # (bool) Allow backup of the application data via adb.
 android.allow_backup = True
@@ -64,8 +64,8 @@ android.entry_point = org.kix.kix
 # (str) Bootstrap: sdl2 = standard Kivy launcher (Python on top of SDL2).
 p4a.bootstrap = sdl2
 
-# (str) p4a branch — pinned to match kivy==2.3.1 above.
-p4a.branch = kivy-2.3.1
+# (str) p4a branch — switched to develop (the remote branch no longer exists).
+p4a.branch = develop
 
 # (bool) Disable .pyo compilation (tiny build speedup).
 p4a.no-compile-pyo = True
