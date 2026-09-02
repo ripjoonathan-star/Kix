@@ -53,7 +53,7 @@ android.ndk_api = 21
 # network block Kix already references in Kix/blocks/{sensors,hardware,
 # audio_advanced,arvr,io,network,notifications}.py. Runtime permission flow
 # is out of scope while these blocks remain stubs.
-android.permissions = INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, CAMERA, RECORD_AUDIO, NFC, VIBRATE, BLUETOOTH, BLUETOOTH_ADMIN, BLUETOOTH_CONNECT, BLUETOOTH_SCAN, READ_EXTERNAL_STORA[...]
+android.permissions = INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, CAMERA, RECORD_AUDIO, NFC, VIBRATE, BLUETOOTH, BLUETOOTH_ADMIN, BLUETOOTH_CONNECT, BLUETOOTH_SCAN, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, MODIFY_AUDIO_SETTINGS
 
 # (bool) Allow backup of the application data via adb.
 android.allow_backup = True
@@ -64,8 +64,8 @@ android.entry_point = org.kix.kix
 # (str) Bootstrap: sdl2 = standard Kivy launcher (Python on top of SDL2).
 p4a.bootstrap = sdl2
 
-# (str) p4a branch — switched to develop (the remote branch no longer exists).
-p4a.branch = develop
+# (str) p4a branch — use master (stable, actively maintained).
+p4a.branch = master
 
 # (bool) Disable .pyo compilation (tiny build speedup).
 p4a.no-compile-pyo = True
