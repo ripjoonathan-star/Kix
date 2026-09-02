@@ -36,6 +36,11 @@ from Kix.block_engine import KixBlock
 from Kix.block_engine.visual import Text as VisualText, BlockInput as VisualInput, Group as VisualGroup
 from Kix.blocks.builtin import ALL as ALL_BLOCKS
 from Kix.core.theme import (
+    BLOCK_ICON_SIZE,
+    BLOCK_MIN_HEIGHT,
+    BLOCK_PADDING_LEFT,
+    BLOCK_TEXT_START_X,
+    BLOCK_WAVE_AMPLITUDE,
     BUTTON_BG_SECONDARY,
     EMERALD,
     EMERALD_PRESSED,
@@ -52,6 +57,11 @@ from Kix.core.theme import (
     TEXT_MED,
     TOUCH_MIN,
     cat_color,
+)
+from Kix.ui.block_render import (
+    draw_bandeirola_bg,
+    draw_block_icon,
+    set_bandeirola_color,
 )
 
 
@@ -224,8 +234,8 @@ class ProgramacaoTab(BoxLayout):
         canvas_box = BoxLayout(
             orientation="vertical",
             size_hint_y=None,
-            spacing=dp(6),
-            padding=[dp(4), dp(4), dp(4), dp(4)],
+            spacing=0,
+            padding=[dp(8), dp(8), dp(8), dp(8)],
         )
         canvas_box.bind(minimum_height=canvas_box.setter("height"))
         self._canvas_widget = canvas_box
@@ -551,7 +561,14 @@ class _BlockChip(ButtonBehavior, BoxLayout):
 
 
 class _CanvasRow(ButtonBehavior, BoxLayout):
-    """Linha do canvas: bloco colorido + botões ↑ ↓ ✎ ✕."""
+    """Linha do canvas: bloco 'bandeirola' + botões ↑ ↓ ✎ ✕ (spec 2.2).
+
+    Layout (esq → dir):
+      [ícone 32×32]  [label x=88dp, 18sp, esquerda]  [↑][↓][✎][✕]
+
+    O ícone é desenhado no canvas do widget via ``draw_block_icon`` (não é um
+    widget filho — fica abaixo do label e ação, evita capturar toques).
+    """
 
     def __init__(
         self,
@@ -571,75 +588,79 @@ class _CanvasRow(ButtonBehavior, BoxLayout):
         self.on_move_down = on_move_down
         self.on_edit = on_edit
         self.size_hint_y = None
-        self.height = dp(48)
-        self.padding = [dp(8), dp(4), dp(4), dp(4)]
+        self.height = dp(BLOCK_MIN_HEIGHT)
+        self.padding = [0, 0, dp(8), 0]
         self._build()
 
     def _build(self) -> None:
         color = _chip_color(self.block.category)
-        with self.canvas.before:
-            self._bg = Color(*color)
-            self._rect = RoundedRectangle(
-                radius=[dp(RADIUS_SM)], pos=self.pos, size=self.size
-            )
-        self.bind(
-            pos=lambda i, _: setattr(i._rect, "pos", i.pos),
-            size=lambda i, _: setattr(i._rect, "size", i.size),
+        amp = dp(BLOCK_WAVE_AMPLITUDE)
+        self._orig_color = color
+
+        # BoxLayout interno: padding-left = BLOCK_TEXT_START_X (88dp) cria o
+        # respiro à esquerda do label; à direita ficam os botões de ação.
+        from Kix.ui.button import IconButton
+        inner = BoxLayout(
+            orientation="horizontal",
+            padding=[dp(BLOCK_TEXT_START_X), dp(8), 0, dp(8)],
+            spacing=dp(4),
         )
 
-        # índice
-        idx = Label(
-            text=f"#{self.index + 1}",
-            font_size="10sp",
-            color=(1, 1, 1, 0.7),
-            halign="left",
-            valign="middle",
-            size_hint_x=None,
-            width=dp(28),
-        )
-        idx.bind(size=lambda i, _: setattr(i, "text_size", i.size))
-        self.add_widget(idx)
-
-        # label do bloco (clicável para editar)
+        # label do bloco (clicável para editar) — esquerda, 18sp, branco
         lbl_btn = _LabelButton(
             text=_block_label(self.block),
-            font_size="13sp",
-            color=(1, 1, 1, 1),
-            bold=True,
+            font_size="18sp",
+            color=TEXT_HIGH,
+            bold=False,
+            halign="left",
+            valign="middle",
         )
+        lbl_btn.size_hint_x = 1  # ocupa o espaço entre ícone e botões
         lbl_btn.bind(on_release=lambda *_: self.on_edit(self.index))
-        self.add_widget(lbl_btn)
+        inner.add_widget(lbl_btn)
 
-        # botões de ação
-        from Kix.ui.button import IconButton
-        up = IconButton(glyph="▲", primary=False)
-        up.size_hint = (None, None)
-        up.size = (dp(32), dp(32))
-        up.bind(on_release=lambda *_: self.on_move_up(self.index))
+        # botões de ação (à direita do label)
+        for glyph, cb in (
+            ("▲", self.on_move_up),
+            ("▼", self.on_move_down),
+            ("✎", self.on_edit),
+            ("✕", self.on_remove),
+        ):
+            btn = IconButton(glyph=glyph, primary=False)
+            btn.size_hint = (None, None)
+            btn.size = (dp(32), dp(32))
+            btn.bind(on_release=lambda *_, c=cb: c(self.index))
+            inner.add_widget(btn)
 
-        down = IconButton(glyph="▼", primary=False)
-        down.size_hint = (None, None)
-        down.size = (dp(32), dp(32))
-        down.bind(on_release=lambda *_: self.on_move_down(self.index))
+        self.add_widget(inner)
 
-        edit = IconButton(glyph="✎", primary=False)
-        edit.size_hint = (None, None)
-        edit.size = (dp(32), dp(32))
-        edit.bind(on_release=lambda *_: self.on_edit(self.index))
+        # canvas.before: fill da bandeirola + ícone (acima do fill, abaixo
+        # dos children). Recriado sempre que size muda.
+        self.bind(
+            size=lambda *_: self._redraw_canvas(),
+            state=self._on_state,
+        )
+        # Desenho inicial — pode rodar antes do size estar setado; o
+        # binding de size refaz quando o layout atribuir dimensões reais.
+        self._redraw_canvas()
 
-        rm = IconButton(glyph="✕", primary=False)
-        rm.size_hint = (None, None)
-        rm.size = (dp(32), dp(32))
-        rm.bind(on_release=lambda *_: self.on_remove(self.index))
+    def _redraw_canvas(self) -> None:
+        """Recria fill da bandeirola + ícone no canvas.before."""
+        self.canvas.before.clear()
+        self._bg, self._mesh = draw_bandeirola_bg(
+            self, self._orig_color, dp(BLOCK_WAVE_AMPLITUDE)
+        )
+        s = dp(BLOCK_ICON_SIZE)
+        x = dp(BLOCK_PADDING_LEFT)
+        y = (self.height - s) / 2
+        draw_block_icon(self, x, y, s, canvas=self.canvas.before)
 
-        self.add_widget(up)
-        self.add_widget(down)
-        self.add_widget(edit)
-        self.add_widget(rm)
-
-        # Suprime o on_release herdado de ButtonBehavior (que dispararia
-        # _CanvasRow.on_release — não usado).
-        self.bind(on_release=lambda *_: None)
+    def _on_state(self, *_):
+        """Estado :down → cor pressionada (emerald)."""
+        if hasattr(self, "_bg"):
+            set_bandeirola_color(
+                self._bg, EMERALD_PRESSED if self.state == "down" else self._orig_color
+            )
 
 
 class _LabelButton(ButtonBehavior, Label):

@@ -1,11 +1,13 @@
 """Design tokens do Kix — M7.
 
-Tema unificado conforme Prompt Milimétrico (seções 1, 1.1, 2, 2.1):
+Tema unificado conforme Prompt Milimétrico (seções 1, 1.1, 2, 2.1, 2.2):
 
 - Fundo preto (#000000) como ``--bg-base`` único da app.
 - Emerald (#10B981) reservado para UI de marca (FAB, foco, ação primária).
 - 9 cores canônicas do Pocket Code para categorias funcionais — Tom principal
   exato; Tom secundário derivado via ``lighten(+0.18)`` para blocos de ação.
+- Tokens geométricos da silhueta "bandeirola" dos blocos (spec 2.2):
+  amplitude de onda, raio de canto, alturas, posições de ícone e texto.
 
 Valores em RGBA (0.0–1.0) — formato aceito pelo Kivy.
 Comentário ao lado de cada constante registra o token CSS equivalente da spec.
@@ -157,6 +159,26 @@ def cat_color(name: str, tone: str = "base") -> tuple[float, float, float, float
     if tone == "light":
         return pair[1]
     raise ValueError(f"tone deve ser 'base' ou 'light', recebeu {tone!r}")
+
+
+# --- 2.2 Geometria do bloco (bandeirola / ribbon) ------------------
+# Silhueta: bordas superior/inferior como 1 curva Bézier quadrática cada
+# (amplitude BLOCK_WAVE_AMPLITUDE). Vértices onda↔lateral arredondados em
+# BLOCK_CORNER_RADIUS. Empilhados sem gap (BLOCK_GAP_STACKED = 0) — a onda
+# inferior do bloco N encaixa na onda superior do bloco N+1.
+
+BLOCK_WAVE_AMPLITUDE  = 8        # --block-wave-amplitude    altura da "barriga"
+BLOCK_CORNER_RADIUS   = 4        # --block-corner-radius     suavização vértice
+BLOCK_MIN_HEIGHT      = 90       # --block-min-height        bloco 1 linha
+BLOCK_HEIGHT_2_LINES  = 140      # --block-height-2-lines    bloco 2 linhas
+BLOCK_PADDING_LEFT    = 24       # --block-padding-left      ícone → borda esquerda
+BLOCK_ICON_SIZE       = 32       # --block-icon-size         ícone quadrado 32×32
+BLOCK_TEXT_START_X    = 88       # --block-text-start-x      texto após ícone + respiro
+BLOCK_GAP_STACKED     = 0        # --block-gap-stacked       blocos da mesma pilha colados
+BLOCK_PARAM_UNDERLINE = (1, 1, 1, 0.6)   # rgba(255,255,255,0.6) — sublinhado 1.5px
+BLOCK_ICON_OUTLINE    = (1, 1, 1, 0.85)  # rgba(255,255,255,0.85) — contorno único
+BLOCK_SHADOW_DRAG_A   = 0.45     # --block-shadow-dragging  rgba(0,0,0,0.45)
+BLOCK_FONT_SIZE_SP    = "18sp"   # --block-text-size  (spec: 18-19sp; valor central)
 
 
 def hex_to_rgba(value: str) -> tuple[float, float, float, float]:
