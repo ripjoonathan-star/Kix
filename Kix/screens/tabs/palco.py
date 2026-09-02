@@ -28,12 +28,11 @@ from kivy.uix.widget import Widget
 from Kix.block_engine import KixBlock
 from Kix.core.theme import (
     BG,
+    CARD_BG,
     EMERALD,
     FONT_SIZE_BODY,
     PADDING,
     SURFACE_1,
-    SURFACE_2,
-    SURFACE_3,
     TEXT_HIGH,
     TEXT_LOW,
     TEXT_MED,
@@ -42,11 +41,11 @@ from Kix.engine.ctx import make_ctx
 from Kix.engine.executor import BlockExecutor
 
 
-Builder.load_string("""
+Builder.load_string(f"""
 <StageView>:
     canvas:
         Color:
-            rgba: 0.071, 0.071, 0.078, 1
+            rgba: {SURFACE_1[0]:.3f}, {SURFACE_1[1]:.3f}, {SURFACE_1[2]:.3f}, {SURFACE_1[3]}
         Rectangle:
             pos: self.pos
             size: self.size
@@ -60,7 +59,7 @@ class StageView(Widget):
         super().__init__(**kwargs)
         self.sprite = None
         with self.canvas:
-            self._sprite_color = Color(0.063, 0.725, 0.506, 1)  # emerald
+            self._sprite_color = Color(*EMERALD)
             self._sprite_rect = Rectangle(pos=self.pos, size=(40, 40))
 
         self.bind(
@@ -84,7 +83,7 @@ class StageView(Widget):
         # Rotação visual não tratada aqui — desenhamos quadrado simples.
         # Cor: emerald por padrão, branco se invisível
         self._sprite_color.rgba = (
-            self.sprite.color if self.sprite.visible else SURFACE_3
+            self.sprite.color if self.sprite.visible else CARD_BG
         )
         # Translada (x,y) do mundo para coordenadas de tela.
         # Assumimos mundo centrado em (cx,cy): x→cx+x, y→cy+y (y-up).

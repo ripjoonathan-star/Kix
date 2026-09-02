@@ -36,20 +36,22 @@ from Kix.block_engine import KixBlock
 from Kix.block_engine.visual import Text as VisualText, BlockInput as VisualInput, Group as VisualGroup
 from Kix.blocks.builtin import ALL as ALL_BLOCKS
 from Kix.core.theme import (
+    BUTTON_BG_SECONDARY,
     EMERALD,
     EMERALD_PRESSED,
     FONT_SIZE_BODY,
     FONT_SIZE_META,
+    INPUT_BG,
+    MODAL_BG,
     PADDING,
     PADDING_SM,
     RADIUS_SM,
-    SURFACE_2,
     SURFACE_3,
-    SURFACE_4,
     TEXT_HIGH,
     TEXT_LOW,
     TEXT_MED,
     TOUCH_MIN,
+    cat_color,
 )
 
 
@@ -67,29 +69,16 @@ CATEGORY_LABELS = {
     "arvr": "AR/VR",
 }
 
-# Cores de "chip" — um pouco mais escuras que a cor da categoria para não cansar.
+# Chip de categoria — usa Tom secundário (clareado) para não cansar visualmente.
+# Categorias Pocket Code canônicas usam cat_color(name, 'light'); extras do Kix
+# caem no fallback SURFACE_3.
 def _chip_color(category: str) -> tuple:
-    from Kix.core.theme import (
-        CAT_MOTION, CAT_LOOKS, CAT_SOUND, CAT_CONTROL, CAT_EVENT,
-        CAT_DATA, CAT_DEVICE, CAT_FILES, CAT_USER, CAT_LIBS,
-        CAT_CAMERA, CAT_NETWORK, CAT_LAYERS, CAT_SHADERS, CAT_UI,
-        CAT_TILEMAP, CAT_SPRITESHEET, CAT_JOYSTICK, CAT_MATH, CAT_STRINGS,
-        CAT_PHYSICS, CAT_PARTICLES, CAT_AUDIO_ADV, CAT_SCENES, CAT_AI,
-        CAT_STORAGE, CAT_NOTIFICATIONS, CAT_ARVR, SURFACE_3,
-    )
-    return {
-        "motion": CAT_MOTION, "looks": CAT_LOOKS, "sound": CAT_SOUND,
-        "control": CAT_CONTROL, "event": CAT_EVENT, "data": CAT_DATA,
-        "sensing": CAT_DEVICE, "device": CAT_DEVICE, "files": CAT_FILES,
-        "user": CAT_USER, "libs": CAT_LIBS, "camera": CAT_CAMERA,
-        "network": CAT_NETWORK, "layers": CAT_LAYERS, "shaders": CAT_SHADERS,
-        "ui": CAT_UI, "tilemap": CAT_TILEMAP, "spritesheet": CAT_SPRITESHEET,
-        "joystick": CAT_JOYSTICK, "math": CAT_MATH, "strings": CAT_STRINGS,
-        "physics": CAT_PHYSICS, "particles": CAT_PARTICLES,
-        "audio_advanced": CAT_AUDIO_ADV, "scenes": CAT_SCENES, "ai": CAT_AI,
-        "storage": CAT_STORAGE, "notifications": CAT_NOTIFICATIONS,
-        "arvr": CAT_ARVR,
-    }.get(category, SURFACE_3)
+    pocket = {"motion", "looks", "sound", "control", "event", "data", "device", "files", "pen"}
+    if category in pocket:
+        return cat_color(category, "light")
+    if category == "sensing":
+        return cat_color("device", "light")
+    return SURFACE_3
 
 
 def _block_label(block: KixBlock) -> str:
@@ -292,7 +281,7 @@ class ProgramacaoTab(BoxLayout):
             is_selected = (k == self._category_filter)
             # reseta attrs para forçar re-render via _on_state
             btn._primary = is_selected
-            btn._bg_color.rgba = EMERALD if is_selected else SURFACE_3
+            btn._bg_color.rgba = EMERALD if is_selected else BUTTON_BG_SECONDARY
 
     # --- paleta -------------------------------------------------------------
     def _populate_palette(self) -> None:
@@ -422,7 +411,7 @@ class ProgramacaoTab(BoxLayout):
                 content=Label(text="Este bloco não tem inputs editáveis."),
                 size_hint=(0.8, None),
                 height=dp(120),
-                background_color=SURFACE_2,
+                background_color=MODAL_BG,
                 separator_height=0,
             )
             popup.open()
@@ -460,7 +449,7 @@ class ProgramacaoTab(BoxLayout):
             ti = TextInput(
                 text=str(default) if default is not None else "",
                 multiline=False,
-                background_color=SURFACE_3,
+                background_color=INPUT_BG,
                 foreground_color=TEXT_HIGH,
                 hint_text_color=TEXT_LOW,
                 cursor_color=EMERALD,
@@ -487,7 +476,7 @@ class ProgramacaoTab(BoxLayout):
             content=box,
             size_hint=(0.85, None),
             height=dp(60 + 36 * len(inputs_meta) + 24),
-            background_color=SURFACE_2,
+            background_color=MODAL_BG,
             separator_height=0,
             auto_dismiss=True,
         )

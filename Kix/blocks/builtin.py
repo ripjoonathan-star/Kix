@@ -16,7 +16,7 @@ from Kix.block_engine import (
     Text,
 )
 from Kix.block_engine.behavior import BlockBehavior
-from Kix.core.theme import EMERALD, SURFACE_3
+from Kix.core.theme import CARD_BG, EMERALD
 
 # Re-exporta as categorias para uso em `from Kix.blocks.builtin import TRANSFORMS`
 from Kix.blocks.transforms import TRANSFORMS            # noqa: F401
@@ -62,7 +62,7 @@ SAY = KixBlock(
     id="core.say",
     name="Dizer",
     category="looks",
-    color=SURFACE_3,
+    color=CARD_BG,
     visual=BlockVisual(root=Group(
         children=[Text("Dizer "), BlockInput("message"), Text(" por "),
                   BlockInput("duration"), Text(" s")],
@@ -80,7 +80,7 @@ WAIT = KixBlock(
     id="core.wait",
     name="Esperar",
     category="control",
-    color=SURFACE_3,
+    color=CARD_BG,
     visual=BlockVisual(root=Group(
         children=[Text("Esperar "), BlockInput("seconds"), Text(" s")],
     )),

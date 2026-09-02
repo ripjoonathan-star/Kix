@@ -9,12 +9,12 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 
 from Kix.core.theme import (
+    CARD_BG,
     FONT_SIZE_HEADING,
     FONT_SIZE_META,
     PADDING,
     RADIUS,
     SURFACE_2,
-    SURFACE_3,
     TEXT_HIGH,
     TEXT_LOW,
     TEXT_MED,
@@ -58,7 +58,7 @@ class ProjectCard(BoxLayout):
 
     def __init__(self, name: str, modified: str, **kwargs):
         super().__init__(orientation="vertical", **kwargs)
-        _rounded_bg(self, SURFACE_3)
+        _rounded_bg(self, CARD_BG)
         title = Label(
             text=name, font_size=f"{FONT_SIZE_HEADING}sp",
             color=TEXT_HIGH, halign="left", valign="bottom",
@@ -82,8 +82,8 @@ class RecentProjectCard(BoxLayout):
 
         self.thumb = BoxLayout(size_hint=(None, 1), width=dp(108))
         with self.thumb.canvas.before:
-            Color(*SURFACE_3)
-            self.thumb._bg_color = Color(*SURFACE_3)
+            Color(*CARD_BG)
+            self.thumb._bg_color = Color(*CARD_BG)
             from kivy.graphics import RoundedRectangle as _RR
             self.thumb._rect = _RR(
                 radius=[dp(RADIUS)], pos=self.thumb.pos, size=self.thumb.size

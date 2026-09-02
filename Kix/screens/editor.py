@@ -19,12 +19,11 @@ from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen
 
 from Kix.core.theme import (
+    BUTTON_BG_SECONDARY,
     EMERALD,
     FONT_SIZE_HEADING,
     PADDING,
-    SURFACE_1,
     SURFACE_2,
-    SURFACE_3,
     TEXT_HIGH,
     TEXT_LOW,
     TEXT_MED,
@@ -52,7 +51,7 @@ Builder.load_string("""
                 spacing: dp(4)
                 canvas.before:
                     Color:
-                        rgba: 0.071, 0.071, 0.078, 1
+                        rgba: 0.078, 0.078, 0.078, 1
                     Rectangle:
                         pos: self.pos
                         size: self.size
@@ -188,7 +187,7 @@ class EditorScreen(Screen):
                     btn._bg_color.rgba = EMERALD
             else:
                 if hasattr(btn, "_bg_color"):
-                    btn._bg_color.rgba = SURFACE_3
+                    btn._bg_color.rgba = BUTTON_BG_SECONDARY
 
     # --- tabs (lazy) ------------------------------------------------------
     def _build_tab(self, name: str) -> BoxLayout:

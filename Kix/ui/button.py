@@ -13,13 +13,13 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 
 from Kix.core.theme import (
+    BUTTON_BG_SECONDARY,
     EMERALD,
     EMERALD_PRESSED,
     PADDING_SM,
+    PRESSED_BG,
     RADIUS,
     RADIUS_SM,
-    SURFACE_3,
-    SURFACE_4,
     TEXT_HIGH,
     TOUCH_MIN,
 )
@@ -28,7 +28,7 @@ Builder.load_string(
     """
 <KixButton>:
     font_size: '14sp'
-    color: 0.93, 0.93, 0.95, 1
+    color: 1, 1, 1, 1
     halign: 'center'
     valign: 'middle'
     text_size: self.size
@@ -46,7 +46,7 @@ class KixButton(ButtonBehavior, Label):
 
     def _build_graphics(self) -> None:
         with self.canvas.before:
-            base = EMERALD if self._primary else SURFACE_3
+            base = EMERALD if self._primary else BUTTON_BG_SECONDARY
             self._bg_color = Color(*base)
             self._rect = RoundedRectangle(
                 radius=[dp(RADIUS_SM)], pos=self.pos, size=self.size
@@ -61,7 +61,7 @@ class KixButton(ButtonBehavior, Label):
         if self._primary:
             self._bg_color.rgba = EMERALD_PRESSED if self.state == "down" else EMERALD
         else:
-            self._bg_color.rgba = SURFACE_4 if self.state == "down" else SURFACE_3
+            self._bg_color.rgba = PRESSED_BG if self.state == "down" else BUTTON_BG_SECONDARY
 
 
 class IconButton(ButtonBehavior, BoxLayout):
@@ -82,7 +82,7 @@ class IconButton(ButtonBehavior, BoxLayout):
 
     def _build_graphics(self, primary: bool) -> None:
         with self.canvas.before:
-            base = EMERALD if primary else SURFACE_3
+            base = EMERALD if primary else BUTTON_BG_SECONDARY
             self._bg_color = Color(*base)
             self._rect = RoundedRectangle(
                 radius=[dp(RADIUS)], pos=self.pos, size=self.size
@@ -94,6 +94,6 @@ class IconButton(ButtonBehavior, BoxLayout):
 
     def _on_state(self, *_):
         if self.state == "down":
-            self._bg_color.rgba = EMERALD_PRESSED if self._bg_color.rgba == EMERALD else SURFACE_4
+            self._bg_color.rgba = EMERALD_PRESSED if self._bg_color.rgba == EMERALD else PRESSED_BG
         else:
-            self._bg_color.rgba = EMERALD if self._bg_color.rgba in (EMERALD_PRESSED,) else SURFACE_3
+            self._bg_color.rgba = EMERALD if self._bg_color.rgba in (EMERALD_PRESSED,) else BUTTON_BG_SECONDARY
