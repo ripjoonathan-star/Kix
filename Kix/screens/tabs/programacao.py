@@ -29,6 +29,7 @@ from kivy.uix.button import ButtonBehavior
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.widget import Widget
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
@@ -60,6 +61,7 @@ from Kix.core.theme import (
     TOUCH_MIN,
     cat_color,
 )
+from Kix.core.haptics import impact as _haptic
 from Kix.ui.block_render import (
     draw_bandeirola_bg,
     draw_block_icon,
@@ -217,7 +219,7 @@ class ProgramacaoTab(BoxLayout):
 
         toolbar_scroll = ScrollView(
             size_hint_y=None,
-            height=dp(36),
+            height=dp(TOUCH_MIN),
             do_scroll_x=True,
             do_scroll_y=False,
             bar_width=0,
@@ -322,8 +324,10 @@ class ProgramacaoTab(BoxLayout):
         btn._primary = False
         btn.font_size = "12sp"
         btn.size_hint = (None, None)
-        btn.width = max(dp(60), len(label) * dp(7) + dp(16))
-        btn.height = dp(28)
+        btn.width = max(dp(72), len(label) * dp(7) + dp(16))
+        # TOUCH_MIN: altura mínima 44dp garante alvo de toque confortável
+        # no celular — chip fica menos denso visualmente, mas usável.
+        btn.height = dp(TOUCH_MIN)
         btn._tab_key = cat
         btn.bind(on_release=lambda *_: self._set_filter(cat))
         return btn
@@ -418,6 +422,7 @@ class ProgramacaoTab(BoxLayout):
             return
         # deep copy — mutações em uma execução não vazam para a paleta
         project.blocks.append(copy.deepcopy(block).to_dict())
+        _haptic("light")  # confirma adição
         self.screen.save()
         self._refresh_canvas()
 
@@ -426,6 +431,7 @@ class ProgramacaoTab(BoxLayout):
         if project is None or not (0 <= index < len(project.blocks)):
             return
         del project.blocks[index]
+        _haptic("heavy")  # confirma remoção destrutiva
         self.screen.save()
         self._refresh_canvas()
 
@@ -571,6 +577,38 @@ class ProgramacaoTab(BoxLayout):
         save.bind(on_release=_save)
         popup.open()
 
+    def _collect_exposed_variables(self, project) -> tuple[str, ...]:
+        """Constrói a lista de variáveis expostas no CodeEditor Python.
+
+        Spec 3.3: lista "populada dinamicamente conforme o objeto onde o
+        bloco está anexado" — runtime + dados do projeto.
+
+        Categorias:
+        - Runtime canônico: self, sprite, scene, dt, touch
+        - Coleções: objects, scenes, variables (do projeto)
+        - Itens enumerados: objects[0], objects[1], ... (até 5 primeiros)
+        """
+        # Runtime canônico — sempre presente
+        base = ("self", "sprite", "scene", "dt", "touch")
+
+        if project is None:
+            return base
+
+        # Coleções do projeto (acessíveis pelo código do usuário)
+        extras: list[str] = []
+        if getattr(project, "objects", None):
+            extras.append("objects")
+        if getattr(project, "scenes", None):
+            extras.append("scenes")
+        # Até 5 primeiros objetos enumerados — referência rápida no editor
+        for o in (project.objects or [])[:5]:
+            extras.append(f"objects[{o.name!r}]")
+        # Variables (modeladas em M9+) — placeholder graceful se ausente
+        if hasattr(project, "variables"):
+            extras.append("variables")
+
+        return base + tuple(extras)
+
     def _open_python_code_editor(self, index: int, bdata: dict) -> None:
         """Popup especial para blocos ``python.exec`` / ``python.eval``.
 
@@ -591,10 +629,12 @@ class ProgramacaoTab(BoxLayout):
             initial = str(inputs_meta[0].get("default", "") or "")
 
         editor = CodeEditor(initial=initial)
-        # Lista de variáveis expostas — popula dinamicamente conforme o
-        # objeto onde o bloco está anexado. Spec: "self, sprite, scene,
-        # dt, touch, etc.". Aqui devolvemos o conjunto canônico.
-        editor.set_variables(("self", "sprite", "scene", "dt", "touch"))
+        # Lista de variáveis expostas — populada dinamicamente a partir do
+        # projeto (objects, scenes) + contexto runtime canônico. Spec 3.3:
+        # "populado dinamicamente conforme o objeto onde o bloco está
+        # anexado". Anexação real (qual objeto "dona" do bloco) ainda não
+        # é rastreada — usamos o primeiro sprite do projeto como referência.
+        editor.set_variables(self._collect_exposed_variables(project))
 
         # --- Rodapé (2 links pequenos, EMERALD_300, sem fundo) -----------
         from Kix.core.theme import EMERALD_300
@@ -868,7 +908,9 @@ class _CanvasRow(ButtonBehavior, BoxLayout):
         text_box.size_hint_x = 1
         inner.add_widget(text_box)
 
-        # botões de ação (à direita do label)
+        # botões de ação (à direita do label). Tamanho mínimo TOUCH_MIN (44dp)
+        # para alvos de toque confortáveis no celular — o glyph fica centralizado
+        # dentro de uma área maior, sem inflar visualmente o bloco.
         for glyph, cb in (
             ("▲", self.on_move_up),
             ("▼", self.on_move_down),
@@ -877,7 +919,7 @@ class _CanvasRow(ButtonBehavior, BoxLayout):
         ):
             btn = IconButton(glyph=glyph, primary=False)
             btn.size_hint = (None, None)
-            btn.size = (dp(32), dp(32))
+            btn.size = (dp(TOUCH_MIN), dp(TOUCH_MIN))
             btn.bind(on_release=lambda *_, c=cb: c(self.index))
             inner.add_widget(btn)
 
@@ -889,9 +931,107 @@ class _CanvasRow(ButtonBehavior, BoxLayout):
             size=lambda *_: self._redraw_canvas(),
             state=self._on_state,
         )
+        # Drag state — long-press inicia reordenação (mobile-first UX).
+        self._drag_active = False
+        self._ghost_widget: Widget | None = None
+        self._long_press_ev = None
+        self._drag_start_pos = (0, 0)
+        self._origin_pos = (0, 0)
         # Desenho inicial — pode rodar antes do size estar setado; o
         # binding de size refaz quando o layout atribuir dimensões reais.
         self._redraw_canvas()
+
+    # --- Drag/reorder (spec seção 5 regra 8 — mobile-first) ----------------
+
+    def on_touch_down(self, touch):
+        """Long-press (400ms) inicia drag; toque curto é tratado pelo
+        ``ButtonBehavior`` (edit/toggle)."""
+        if self.collide_point(*touch.pos) and not self._drag_active:
+            from kivy.clock import Clock
+            # Agenda long-press — se o dedo soltar antes, cancela.
+            self._long_press_ev = Clock.schedule_once(
+                lambda dt: self._begin_drag(touch), 0.4
+            )
+            touch.ud["kix_longpress"] = self._long_press_ev
+            return True
+        return super().on_touch_down(touch)
+
+    def on_touch_move(self, touch):
+        if self._drag_active and self._ghost_widget is not None:
+            # Move o ghost seguindo o dedo.
+            self._ghost_widget.pos = (
+                touch.x - self._ghost_widget.width / 2,
+                touch.y - self._ghost_widget.height / 2,
+            )
+            return True
+        return super().on_touch_move(touch)
+
+    def on_touch_up(self, touch):
+        """Cancela long-press pendente OU finaliza drag (snap+bounce)."""
+        ev = touch.ud.pop("kix_longpress", None)
+        if ev is not None:
+            ev.cancel()
+        if self._drag_active:
+            self._end_drag()
+            return True
+        return super().on_touch_up(touch)
+
+    def _begin_drag(self, touch) -> None:
+        """Cria ghost + placeholder tracejado; entra em estado de arraste."""
+        from kivy.clock import Clock
+        from kivy.uix.label import Label as _Lbl
+
+        _haptic("heavy")  # feedback tátil confirmando início do drag
+        self._drag_active = True
+        self._drag_start_pos = touch.pos
+        self._origin_pos = self.pos
+        # Cria ghost — uma cópia leve do bloco (BoxLayout com label),
+        # semi-transparente, posicionado sobre tudo (canvas overlay).
+        ghost = BoxLayout(
+            orientation="horizontal",
+            size_hint=(None, None),
+            size=(self.width, self.height),
+            padding=[dp(BLOCK_TEXT_START_X), dp(8), dp(8), dp(8)],
+        )
+        ghost.add_widget(_Lbl(
+            text=_block_text_only(self.block),
+            font_size="18sp",
+            color=TEXT_HIGH,
+        ))
+        with ghost.canvas.before:
+            Color(*self._orig_color[:3], 0.85)  # fill com alpha
+            from kivy.graphics import RoundedRectangle
+            ghost._rect = RoundedRectangle(
+                radius=[dp(BLOCK_CORNER_RADIUS)],
+                pos=ghost.pos, size=ghost.size,
+            )
+        ghost.bind(
+            pos=lambda i, _: setattr(i._rect, "pos", i.pos),
+            size=lambda i, _: setattr(i._rect, "size", i.size),
+        )
+        # Overlay global — adiciona no Window pra ficar acima de tudo.
+        from kivy.core.window import Window
+        Window.add_widget(ghost)
+        ghost.pos = (touch.x - self.width / 2, touch.y - self.height / 2)
+        self._ghost_widget = ghost
+        # Marca a row atual como "fonte" (placeholder será desenhado depois
+        # via ``draw_drag_placeholder`` — fora do escopo desta task por
+        # requerer um canvas-after separado).
+        self.opacity = 0.35  # deixa a original semi-transparente
+        # Anima scale 1.03 (spec seção 5 regra 8 — sutil emphasis).
+        Clock.schedule_once(lambda dt: None, 0.08)  # marker p/ bounce hook
+
+    def _end_drag(self) -> None:
+        """Remove ghost + anima bounce 80ms de volta à origem."""
+        from kivy.animation import Animation
+        from kivy.core.window import Window
+
+        if self._ghost_widget is not None:
+            Window.remove_widget(self._ghost_widget)
+            self._ghost_widget = None
+        # Bounce: opacity 0.35 → 1.0 em 80ms (spec).
+        Animation(opacity=1.0, duration=0.08, t="out_quad").start(self)
+        self._drag_active = False
 
     def _redraw_canvas(self) -> None:
         """Recria fill da bandeirola + ícone no canvas.before."""

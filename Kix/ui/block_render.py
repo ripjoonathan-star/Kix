@@ -23,7 +23,12 @@ from typing import Tuple
 
 from kivy.graphics import Color, Line, Mesh
 
-from Kix.core.theme import BLOCK_CORNER_RADIUS, BLOCK_ICON_OUTLINE, BLOCK_PARAM_UNDERLINE
+from Kix.core.theme import (
+    BLOCK_CORNER_RADIUS,
+    BLOCK_ICON_OUTLINE,
+    BLOCK_PARAM_UNDERLINE,
+    BLOCK_WAVE_AMPLITUDE,
+)
 
 
 def bandeirola_mesh(

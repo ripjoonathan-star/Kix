@@ -38,6 +38,7 @@ from Kix.core.theme import (
     TEXT_MED,
 )
 from Kix.projects.manager import ProjectManager
+from Kix.core.haptics import impact as _haptic
 from Kix.ui.app_bar import KixAppBar
 from Kix.ui.button import IconButton, KixButton
 from Kix.ui.card import ProjectCard, RecentProjectCard
@@ -67,7 +68,7 @@ Builder.load_string("""
             size: dp(64), dp(64)
             x: root.width - dp(80)
             y: dp(32)
-            on_release: root._show_new_project_popup()
+            on_release: root._haptic_then_new()
 """)
 
 
@@ -123,6 +124,11 @@ class DashboardScreen(Screen):
             content.add_widget(card)
 
     # --- criação ----------------------------------------------------------
+    def _haptic_then_new(self) -> None:
+        """FAB: vibra e abre popup."""
+        _haptic("light")
+        self._show_new_project_popup()
+
     def _show_new_project_popup(self) -> None:
         box = BoxLayout(orientation="vertical", padding=dp(20), spacing=dp(16))
         title = Label(
@@ -176,9 +182,11 @@ class DashboardScreen(Screen):
             try:
                 self._manager.create(name)
             except FileExistsError:
+                _haptic("error")
                 name_input.hint_text = "Já existe — escolha outro nome"
                 name_input.text = ""
                 return
+            _haptic("medium")  # confirmação de criação
             popup.dismiss()
             self.refresh()
 
@@ -239,6 +247,7 @@ class DashboardScreen(Screen):
         """Tap no card abre o editor."""
         def _on_touch(instance, touch):
             if card.collide_point(*touch.pos):
+                _haptic("light")  # confirma seleção
                 DashboardScreen._open_editor(name)
                 return True
             return False
