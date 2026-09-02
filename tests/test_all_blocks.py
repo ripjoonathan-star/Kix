@@ -164,13 +164,15 @@ def test_every_behavior_has_valid_language():
 def test_category_colors_distinct():
     """Cada categoria deve ter um tom diferente para distinguir visualmente."""
     from Kix.core.theme import (
-        CAT_CAMERA, CAT_CONTROL, CAT_DATA, CAT_DEVICE, CAT_FILES,
-        CAT_JOYSTICK, CAT_LAYERS, CAT_LIBS, CAT_LOOKS, CAT_MOTION,
-        CAT_NETWORK, CAT_PEN, CAT_SHADERS, CAT_SOUND, CAT_SPRITESHEET,
-        CAT_TILEMAP, CAT_UI, CAT_USER,
+        CAT_AI, CAT_CAMERA, CAT_CONTROL, CAT_DATA, CAT_DEVICE,
+        CAT_ECONOMY, CAT_FILES, CAT_JOYSTICK, CAT_LAYERS, CAT_LIBS,
+        CAT_LOOKS, CAT_MOTION, CAT_NETWORK, CAT_PARTICLES, CAT_PEN,
+        CAT_PHYSICS, CAT_PYTHON, CAT_SHADERS, CAT_SOUND, CAT_SPRITESHEET,
+        CAT_STORAGE, CAT_TILEMAP, CAT_UI, CAT_USER,
     )
-    palette = [CAT_CAMERA, CAT_CONTROL, CAT_DATA, CAT_DEVICE, CAT_FILES,
-               CAT_JOYSTICK, CAT_LAYERS, CAT_LIBS, CAT_LOOKS, CAT_MOTION,
-               CAT_NETWORK, CAT_PEN, CAT_SHADERS, CAT_SOUND, CAT_SPRITESHEET,
-               CAT_TILEMAP, CAT_UI, CAT_USER]
+    palette = [CAT_AI, CAT_CAMERA, CAT_CONTROL, CAT_DATA, CAT_DEVICE,
+               CAT_ECONOMY, CAT_FILES, CAT_JOYSTICK, CAT_LAYERS, CAT_LIBS,
+               CAT_LOOKS, CAT_MOTION, CAT_NETWORK, CAT_PARTICLES, CAT_PEN,
+               CAT_PHYSICS, CAT_PYTHON, CAT_SHADERS, CAT_SOUND, CAT_SPRITESHEET,
+               CAT_STORAGE, CAT_TILEMAP, CAT_UI, CAT_USER]
     assert len(palette) == len(set(palette)), "Há cores duplicadas no tema"

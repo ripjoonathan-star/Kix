@@ -76,16 +76,23 @@ CATEGORY_LABELS = {
     "joystick": "Joystick", "math": "Matemática", "strings": "Textos",
     "physics": "Física", "particles": "Partículas",
     "audio_advanced": "Áudio+", "scenes": "Cenas", "ai": "IA",
-    "storage": "Armazenamento", "notifications": "Notificações",
-    "arvr": "AR/VR",
+    "storage": "Banco", "notifications": "Notificações",
+    "arvr": "AR/VR", "economy": "Economia", "python": "Python",
 }
 
 # Chip de categoria — usa Tom secundário (clareado) para não cansar visualmente.
-# Categorias Pocket Code canônicas usam cat_color(name, 'light'); extras do Kix
-# caem no fallback SURFACE_3.
+# Categorias com two-tone canônico (Pocket Code + spec 3.1) usam
+# cat_color(name, 'light'); as demais caem no fallback SURFACE_3.
 def _chip_color(category: str) -> tuple:
-    pocket = {"motion", "looks", "sound", "control", "event", "data", "device", "files", "pen"}
-    if category in pocket:
+    twotone = {
+        # Pocket Code canônico (spec 2)
+        "motion", "looks", "sound", "control", "event", "data",
+        "device", "files", "pen",
+        # Extras Kix com paleta curada (spec 3.1)
+        "physics", "network", "storage", "economy",
+        "particles", "ai", "tilemap", "python",
+    }
+    if category in twotone:
         return cat_color(category, "light")
     if category == "sensing":
         return cat_color("device", "light")

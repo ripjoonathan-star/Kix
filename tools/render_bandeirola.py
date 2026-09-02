@@ -40,6 +40,12 @@ DEMO = [
     ("control.wait",         "Esperar segundos",     "secs=1"),
     ("sound.play",           "Tocar som",            "som=Pop"),
     ("physics.gravity",      "Definir gravidade",    "valor=9.8"),
+    ("physics.add_wall",     "Adicionar parede",     None),
+    ("network.connect",      "Conectar servidor",    "host=localhost"),
+    ("storage.save",         "Salvar progresso",     "slot=1"),
+    ("ai.pathfind",          "Pathfinding para",     "alvo=Player"),
+    ("particles.emit",       "Emitir partículas",    "qtd=20, tipo=fogo"),
+    ("tilemap.tile_at",      "Tile em linha/col",    "linha=0, col=0"),
     ("motion.move_xy",       "Mover x/y",            "dx=10, dy=0"),
 ]
 
@@ -159,10 +165,19 @@ def render(out_path: Path) -> None:
     cursor_y = y0
     for _id, label, params in DEMO:
         category = _id.split(".")[0]
-        color = cat_color(category, "base") if category in {
-            "motion", "looks", "sound", "control", "event", "data",
-            "device", "files", "pen",
-        } else SURFACE_1
+        # Tenta via cat_color() (Pocket Code + spec 3.1). Fallback SURFACE_1
+        # para categorias sem two-tone canônico.
+        try:
+            color = cat_color(category, "base")
+            # cat_color devolve SURFACE_3 (0.051,0.051,0.051,1) p/ cat. desconhecida
+            if color == (0.051, 0.051, 0.051, 1) and category not in {
+                "layers", "shaders", "ui", "spritesheet", "joystick", "math",
+                "strings", "audio_advanced", "scenes", "notifications", "arvr",
+                "user", "libs", "camera", "sensing",
+            }:
+                color = SURFACE_1
+        except Exception:
+            color = SURFACE_1
         block_h = BLOCK_HEIGHT_2_LINES if params else BLOCK_MIN_HEIGHT
         _render_block(draw, x0, cursor_y, block_w, label, params, color)
         cursor_y += block_h + gap

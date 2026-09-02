@@ -1,11 +1,14 @@
 """Design tokens do Kix — M7.
 
-Tema unificado conforme Prompt Milimétrico (seções 1, 1.1, 2, 2.1, 2.2):
+Tema unificado conforme Prompt Milimétrico (seções 1, 1.1, 2, 2.1, 2.2, 3.1):
 
 - Fundo preto (#000000) como ``--bg-base`` único da app.
 - Emerald (#10B981) reservado para UI de marca (FAB, foco, ação primária).
 - 9 cores canônicas do Pocket Code para categorias funcionais — Tom principal
   exato; Tom secundário derivado via ``lighten(+0.18)`` para blocos de ação.
+- 8 cores extras do Kix (Fase 1B — spec seção 3.1): physics, network, storage,
+  particles, ai, tilemap, economy, python (esta última categoria especial
+  per spec seção 3.3 — extensibilidade total via Python/Kivy).
 - Tokens geométricos da silhueta "bandeirola" dos blocos (spec 2.2):
   amplitude de onda, raio de canto, alturas, posições de ícone e texto.
 
@@ -64,31 +67,53 @@ CAT_DATA_LIGHT    = (0.957, 0.561, 0.529, 1)   # #F48F87
 CAT_DEVICE_LIGHT  = (0.749, 0.647, 0.239, 1)   # #BFA53D
 CAT_FILES_LIGHT   = (0.796, 0.839, 0.369, 1)   # #CBD65E
 
-# --- Categorias extras do Kix (manter valores até Fase 1B) ---------------
-# Estas 13 categorias existem em Kix mas não estão na spec Pocket Code original.
-# Valores preservados do tema anterior — serão revistas quando a Seção 3.1
-# da spec trouxer a paleta curada de novas categorias.
+# --- Categorias extras do Kix (spec seção 3.1) ----------------------------
+# Paleta curada conforme tabela Seção 3.1 do Prompt Milimétrico. Cada
+# categoria tem Tom principal exato da spec + Tom secundário derivado.
+# CAT_STORAGE usa luminosidade/saturação baixas deliberadamente (spec):
+# "propositalmente baixas para não competir com --emerald-500 de marca".
 
-CAT_USER         = (0.30, 0.35, 0.75, 1)
-CAT_LIBS         = (0.95, 0.55, 0.85, 1)
-CAT_CAMERA       = (0.40, 0.70, 0.90, 1)
-CAT_NETWORK      = (0.35, 0.60, 0.80, 1)
-CAT_LAYERS       = (0.55, 0.55, 0.65, 1)
-CAT_SHADERS      = (0.75, 0.50, 0.85, 1)
-CAT_UI           = (0.20, 0.55, 0.55, 1)
-CAT_TILEMAP      = (0.55, 0.75, 0.40, 1)
-CAT_SPRITESHEET  = (0.85, 0.55, 0.35, 1)
-CAT_JOYSTICK     = (0.30, 0.70, 0.60, 1)
-CAT_MATH         = (0.30, 0.65, 0.85, 1)
-CAT_STRINGS      = (0.55, 0.85, 0.75, 1)
-CAT_PHYSICS      = (0.45, 0.50, 0.85, 1)
-CAT_PARTICLES    = (0.95, 0.75, 0.40, 1)
-CAT_AUDIO_ADV    = (0.75, 0.55, 0.95, 1)
-CAT_SCENES       = (0.50, 0.65, 0.55, 1)
-CAT_AI           = (0.85, 0.45, 0.45, 1)
-CAT_STORAGE      = (0.65, 0.65, 0.75, 1)
+CAT_PHYSICS   = (0.761, 0.255, 0.047, 1)   # Física/Colisão  #C2410C (terracota)
+CAT_PHYSICS_LIGHT   = (0.878, 0.541, 0.361, 1)   # #E08A5C
+
+CAT_NETWORK   = (0.184, 0.663, 0.631, 1)   # Rede/Multiplayer #2FA9A1 (teal petróleo)
+CAT_NETWORK_LIGHT   = (0.435, 0.788, 0.761, 1)   # #6FC9C2
+
+CAT_STORAGE   = (0.024, 0.373, 0.275, 1)   # Banco/Persistência #065F46 (verde escuro, low-contrast)
+CAT_STORAGE_LIGHT   = (0.239, 0.612, 0.486, 1)   # #3D9C7C
+
+CAT_ECONOMY   = (0.792, 0.541, 0.016, 1)   # Economia #CA8A04 (dourado envelhecido)
+CAT_ECONOMY_LIGHT   = (0.910, 0.757, 0.361, 1)   # #E8C15C
+
+CAT_PARTICLES = (0.486, 0.227, 0.929, 1)   # Partículas/Efeitos #7C3AED (violeta profundo)
+CAT_PARTICLES_LIGHT = (0.655, 0.545, 0.980, 1)   # #A78BFA
+
+CAT_AI        = (0.357, 0.431, 0.961, 1)   # IA/Comportamento  #5B6EF5 (índigo)
+CAT_AI_LIGHT        = (0.549, 0.596, 0.973, 1)   # #8C98F8
+
+CAT_TILEMAP   = (0.471, 0.443, 0.424, 1)   # Tiles #78716C (stone/cinza-amarronzado)
+CAT_TILEMAP_LIGHT   = (0.659, 0.635, 0.620, 1)   # #A8A29E
+
+CAT_PYTHON    = (0.216, 0.463, 0.671, 1)   # Python Puro #3776AB (azul Python oficial) — categoria especial (spec 3.3)
+CAT_PYTHON_LIGHT    = (0.435, 0.659, 0.847, 1)   # #6FA8D8
+
+# --- Demais categorias Kix (não constam da spec 3.1; valores mantidos) --
+# Estas continuam com tons placeholder — aguardando spec para cor canônica.
+
+CAT_USER          = (0.30, 0.35, 0.75, 1)
+CAT_LIBS          = (0.95, 0.55, 0.85, 1)
+CAT_CAMERA        = (0.40, 0.70, 0.90, 1)
+CAT_LAYERS        = (0.55, 0.55, 0.65, 1)
+CAT_SHADERS       = (0.75, 0.50, 0.85, 1)
+CAT_UI            = (0.20, 0.55, 0.55, 1)
+CAT_SPRITESHEET   = (0.85, 0.55, 0.35, 1)
+CAT_JOYSTICK      = (0.30, 0.70, 0.60, 1)
+CAT_MATH          = (0.30, 0.65, 0.85, 1)
+CAT_STRINGS       = (0.55, 0.85, 0.75, 1)
+CAT_AUDIO_ADV     = (0.75, 0.55, 0.95, 1)
+CAT_SCENES        = (0.50, 0.65, 0.55, 1)
 CAT_NOTIFICATIONS = (0.95, 0.85, 0.40, 1)
-CAT_ARVR         = (0.45, 0.85, 0.85, 1)
+CAT_ARVR          = (0.45, 0.85, 0.85, 1)
 
 # --- Aliases semânticos (Fase 1A) ----------------------------------------
 # Mapeiam uso → cor. Sobrevivem ao renomeio de SURFACE_* porque o nome da
@@ -122,10 +147,11 @@ FONT_SIZE_META    = 12   # datas e legendas
 
 # --- Helpers ------------------------------------------------------------
 
-# Mapeamento categoria Pocket Code (nome curto) → (Tom principal, Tom secundário).
-# Categorias extras do Kix (math, strings, etc.) não estão aqui — use a
-# constante CAT_X diretamente.
+# Mapeamento categoria Pocket Code + extras spec 3.1 → (base, light).
+# Categorias fora desta tabela (math, strings, user, libs, etc.) não têm
+# two-tone canônico — use a constante CAT_X diretamente.
 _CAT_TABLE: dict[str, tuple[tuple[float, float, float, float], tuple[float, float, float, float]]] = {
+    # Pocket Code canônico (spec 2)
     "event":   (CAT_EVENT,   CAT_EVENT_LIGHT),
     "control": (CAT_CONTROL, CAT_CONTROL_LIGHT),
     "motion":  (CAT_MOTION,  CAT_MOTION_LIGHT),
@@ -135,15 +161,23 @@ _CAT_TABLE: dict[str, tuple[tuple[float, float, float, float], tuple[float, floa
     "data":    (CAT_DATA,    CAT_DATA_LIGHT),
     "device":  (CAT_DEVICE,  CAT_DEVICE_LIGHT),
     "files":   (CAT_FILES,   CAT_FILES_LIGHT),
+    # Extras Kix com paleta curada (spec 3.1)
+    "physics":   (CAT_PHYSICS,   CAT_PHYSICS_LIGHT),
+    "network":   (CAT_NETWORK,   CAT_NETWORK_LIGHT),
+    "storage":   (CAT_STORAGE,   CAT_STORAGE_LIGHT),
+    "economy":   (CAT_ECONOMY,   CAT_ECONOMY_LIGHT),
+    "particles": (CAT_PARTICLES, CAT_PARTICLES_LIGHT),
+    "ai":        (CAT_AI,        CAT_AI_LIGHT),
+    "tilemap":   (CAT_TILEMAP,   CAT_TILEMAP_LIGHT),
+    "python":    (CAT_PYTHON,    CAT_PYTHON_LIGHT),
 }
 
 
 def cat_color(name: str, tone: str = "base") -> tuple[float, float, float, float]:
     """Tom principal (``'base'``) ou Tom secundário (``'light'``) de categoria.
 
-    ``name`` é o nome curto da categoria Pocket Code sem prefixo ``CAT_``
-    (ex: ``'event'``, ``'control'``, ``'motion'``, ``'sound'``, ``'looks'``,
-    ``'pen'``, ``'data'``, ``'device'``, ``'files'``).
+    ``name`` é o nome curto da categoria Pocket Code ou Kix sem prefixo
+    ``CAT_`` (ex: ``'event'``, ``'physics'``, ``'python'``).
 
     ``tone='light'`` devolve o Tom secundário exato da spec — réplique da
     regra Pocket Code em que blocos de "ação/comando" dentro de uma categoria
