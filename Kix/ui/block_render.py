@@ -177,3 +177,47 @@ def draw_param_underline(widget, x: float, y: float, width: float) -> None:
     with widget.canvas:
         Color(*BLOCK_PARAM_UNDERLINE)
         Line(points=[x, y, x + width, y], width=1.5)
+
+
+# --- Placeholder tracejado (estado de arraste — spec seção 5 regra 8) --
+
+
+def draw_drag_placeholder(
+    widget,
+    width: float,
+    height: float,
+    amplitude: float = BLOCK_WAVE_AMPLITUDE,
+    color=(1, 1, 1, 0.4),
+) -> None:
+    """Silhueta bandeirola tracejada — placeholder quando um bloco está
+    sendo arrastado (spec seção 5 regra 8: "estado de arraste com
+    sombra/placeholder tracejado").
+
+    Diferente do bloco real, é apenas contorno (não fill) e tracejado.
+    Cor padrão: branco 40% alpha.
+    """
+    segments_count = 12
+    r = min(BLOCK_CORNER_RADIUS, width / 2, height / 2)
+
+    outline_pts: list[float] = []
+    # Top wave: i=0..segments_count
+    for i in range(segments_count + 1):
+        t = i / segments_count
+        x = r + (width - 2 * r) * t
+        y = -4 * amplitude * t * (1 - t)
+        outline_pts.extend([x, y])
+    # Right side
+    outline_pts.extend([width, height - r])
+    # Bottom wave (i=segments_count..0)
+    for i in range(segments_count, -1, -1):
+        t = i / segments_count
+        x = r + (width - 2 * r) * t
+        y = height + 4 * amplitude * t * (1 - t)
+        outline_pts.extend([x, y])
+    # Left side
+    outline_pts.extend([0.0, r])
+
+    with widget.canvas:
+        Color(*color)
+        Line(points=outline_pts, close=True, width=1.5,
+             dash_length=4, dash_offset=2)

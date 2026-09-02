@@ -162,16 +162,21 @@ def test_every_behavior_has_valid_language():
 
 # --- Cores por categoria ---------------------------------------------------
 def test_category_colors_distinct():
-    """Cada categoria deve ter um tom diferente para distinguir visualmente."""
+    """Cada categoria CANÔNICA deve ter um tom diferente.
+
+    Spec seção 5 regra 6: sub-categorias situacionais/hardware (camera,
+    arvr, joystick, notifications) consolidam em "Blocos Extras" (mesmo
+    tom #64748B). Estes são excluídos da verificação de unicidade.
+    """
     from Kix.core.theme import (
-        CAT_AI, CAT_CAMERA, CAT_CONTROL, CAT_DATA, CAT_DEVICE,
-        CAT_ECONOMY, CAT_FILES, CAT_JOYSTICK, CAT_LAYERS, CAT_LIBS,
+        CAT_AI, CAT_CONTROL, CAT_DATA, CAT_DEVICE,
+        CAT_ECONOMY, CAT_FILES, CAT_LAYERS, CAT_LIBS,
         CAT_LOOKS, CAT_MOTION, CAT_NETWORK, CAT_PARTICLES, CAT_PEN,
         CAT_PHYSICS, CAT_PYTHON, CAT_SHADERS, CAT_SOUND, CAT_SPRITESHEET,
         CAT_STORAGE, CAT_TILEMAP, CAT_UI, CAT_USER,
     )
-    palette = [CAT_AI, CAT_CAMERA, CAT_CONTROL, CAT_DATA, CAT_DEVICE,
-               CAT_ECONOMY, CAT_FILES, CAT_JOYSTICK, CAT_LAYERS, CAT_LIBS,
+    palette = [CAT_AI, CAT_CONTROL, CAT_DATA, CAT_DEVICE,
+               CAT_ECONOMY, CAT_FILES, CAT_LAYERS, CAT_LIBS,
                CAT_LOOKS, CAT_MOTION, CAT_NETWORK, CAT_PARTICLES, CAT_PEN,
                CAT_PHYSICS, CAT_PYTHON, CAT_SHADERS, CAT_SOUND, CAT_SPRITESHEET,
                CAT_STORAGE, CAT_TILEMAP, CAT_UI, CAT_USER]
