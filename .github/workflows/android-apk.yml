@@ -1,0 +1,90 @@
+name: Android APK
+
+# Build a debug APK and upload it as a workflow artifact.
+#
+# Trigger 1: push a tag matching v* (e.g. v0.1.0).
+#   git tag v0.1.0 && git push --tags
+# Trigger 2: manual run from the Actions tab (workflow_dispatch).
+#
+# After the run finishes, download the APK from the workflow run's
+# "Artifacts" section and install it on the phone.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache .buildozer (Android SDK + NDK + p4a bootstrap)
+        # First run downloads ~3 GB and takes 20-40 min. Cached runs reuse
+        # the SDK/NDK and finish in 5-15 min.
+        uses: actions/cache@v4
+        with:
+          path: ~/.buildozer
+          key: buildozer-v1-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-v1-${{ runner.os }}-
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential ccache git libffi-dev libssl-dev \
+            libjpeg-dev libpng-dev zlib1g-dev libfreetype6-dev \
+            libsqlite3-dev libstdc++6 openjdk-17-jdk-headless \
+            autoconf libtool pkg-config unzip zip
+
+      - name: Install buildozer + cython
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "buildozer==1.5.0" "cython==3.0.10"
+
+      - name: Generate launcher icon
+        run: make icon
+
+      - name: Build debug APK
+        # `yes |` answers the Android SDK license prompt non-interactively.
+        run: yes | buildozer -v android debug
+
+      - name: Locate APK
+        id: locate
+        run: |
+          APK=$(find .buildozer/android/platform/build-*/dists/kix/builds/android -name '*.apk' -print -quit)
+          if [ -z "$APK" ]; then
+            echo "::error::No APK found under .buildozer/android/platform/"
+            exit 1
+          fi
+          echo "apk=$APK" >> "$GITHUB_OUTPUT"
+          echo "Found APK: $APK"
+
+      - name: Show APK size
+        run: ls -lh "${{ steps.locate.outputs.apk }}"
+
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kix-debug-${{ github.ref_name }}
+          path: ${{ steps.locate.outputs.apk }}
+          if-no-files-found: error
+          retention-days: 14
