@@ -20,32 +20,65 @@ jobs:
         pip install --upgrade pip
         pip install "buildozer==1.5.0" "cython<3.0.0" kivy
 
-    - name: Build with Buildozer
+    - name: Prepare buildozer.spec
       run: |
-        # Força a limpeza de qualquer cache antigo da pasta do projeto para eliminar o Python 3.14 residual
-        rm -rf .buildozer
-        rm -rf ~/.buildozer
-        
         if [ ! -f buildozer.spec ]; then
           buildozer init
         fi
-        
-        # Injeta obrigatoriamente a correção de versões no arquivo de configuração
+
+        # Injeta a correção de versões e força o p4a a usar a branch master,
+        # que já corrige o bug de corrupção do pip na venv temporária
+        # (ImportError: cannot import name 'open_rich_spinner'/'RequirementInformation'
+        # etc. -- ver https://github.com/kivy/python-for-android/pull/3360)
         python3 -c "
         with open('buildozer.spec', 'r') as f:
             lines = f.readlines()
+
+        keys_set = set()
         with open('buildozer.spec', 'w') as f:
             for line in lines:
-                if line.strip().startswith('requirements ='):
+                stripped = line.strip()
+                if stripped.startswith('requirements ='):
                     f.write('requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython\n')
-                elif line.strip().startswith('log_level ='):
+                    keys_set.add('requirements')
+                elif stripped.startswith('log_level ='):
                     f.write('log_level = 2\n')
+                    keys_set.add('log_level')
+                elif stripped.startswith('#p4a.branch') or stripped.startswith('p4a.branch'):
+                    f.write('p4a.branch = master\n')
+                    keys_set.add('p4a.branch')
                 else:
                     f.write(line)
+            if 'p4a.branch' not in keys_set:
+                f.write('p4a.branch = master\n')
         "
-        
-        # Executa a compilação limpa respondendo sim para as licenças
-        yes | buildozer -v android debug
+
+    - name: Build with Buildozer
+      run: |
+        # Limpa qualquer cache antigo antes da primeira tentativa
+        rm -rf .buildozer
+        rm -rf ~/.buildozer
+
+        MAX_TRIES=3
+        for i in $(seq 1 $MAX_TRIES); do
+          echo "### Tentativa de build $i de $MAX_TRIES ###"
+          if yes | buildozer -v android debug; then
+            echo "Build concluído com sucesso."
+            exit 0
+          fi
+
+          echo "Build falhou na tentativa $i."
+          if [ "$i" -lt "$MAX_TRIES" ]; then
+            echo "Limpando venv de build (pode estar corrompida por falha de rede) e tentando de novo..."
+            # Remove só as venvs internas do python-for-android, não o cache inteiro,
+            # pra próxima tentativa ser mais rápida
+            find .buildozer -type d -name venv -path '*build*' -exec rm -rf {} + 2>/dev/null || true
+            sleep 5
+          fi
+        done
+
+        echo "Build falhou após $MAX_TRIES tentativas."
+        exit 1
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
