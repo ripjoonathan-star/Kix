@@ -22,13 +22,12 @@ jobs:
 
     - name: Build with Buildozer
       run: |
-        # Se o arquivo buildozer.spec não existir, cria um básico automaticamente
         if [ ! -f buildozer.spec ]; then
           buildozer init
         fi
         
-        # Executa o buildozer aceitando os termos da Google nativamente
-        buildozer --accept-sdk-license android debug
+        # CORREÇÃO: Força o terminal do Linux a responder "y" (sim) para todas as perguntas de licença da Google
+        yes | buildozer -v android debug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
