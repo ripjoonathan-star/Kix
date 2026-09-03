@@ -11,14 +11,15 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'  # Alinhado com o Python que seu app quer usar
 
     - name: Install System Dependencies
       run: |
         sudo apt update
         sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
         pip install --upgrade pip
-        pip install buildozer kivy cython
+        # Força uma versão estável e compatível do Buildozer e ferramentas de compilação
+        pip install "buildozer==1.5.0" kivy cython
 
     - name: Build with Buildozer
       run: |
@@ -26,7 +27,10 @@ jobs:
           buildozer init
         fi
         
-        # CORREÇÃO: Força o terminal do Linux a responder "y" (sim) para todas as perguntas de licença da Google
+        # Garante que a linha de requerimentos do Python no spec use uma sintaxe genérica aceita pela automação
+        sed -i 's/requirements = python3==3.11.6/requirements = python3/g' buildozer.spec
+        
+        # Força o terminal do Linux a responder "y" para as licenças da Google
         yes | buildozer -v android debug
 
     - name: Upload APK Artifact
