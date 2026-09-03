@@ -22,5 +22,16 @@ jobs:
 
     - name: Build with Buildozer
       run: |
-        # Executa o buildozer aceitando todas as licenças do SDK de forma nativa e automática
+        # Se o arquivo buildozer.spec não existir, cria um básico automaticamente
+        if [ ! -f buildozer.spec ]; then
+          buildozer init
+        fi
+        
+        # Executa o buildozer aceitando os termos da Google nativamente
         buildozer --accept-sdk-license android debug
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: package
+        path: bin/*.apk
