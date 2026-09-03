@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 120   # avoid hanging jobs burning minutes
 
     steps:
     - name: Checkout repository
@@ -26,6 +27,15 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    - name: Free up disk space
+      run: |
+        set +e
+        sudo rm -rf /usr/local/lib/android/sdk/ndk-bundle \
+                    /opt/ghc /usr/local/.ghcup \
+                    /usr/share/dotnet /opt/hostedtoolcache/CodeQL
+        sudo docker image prune -af || true
+        df -h
+
     - name: Cache Buildozer & Gradle
       uses: actions/cache@v4
       with:
@@ -33,24 +43,34 @@ jobs:
           ~/.buildozer
           .buildozer
           ~/.gradle
-        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+        key: runner.os−buildozer−{{ runner.os }}-buildozer-runner.os−buildozer−{{ hashFiles('buildozer.spec') }}
         restore-keys: |
           ${{ runner.os }}-buildozer-
 
     - name: Install System Dependencies
       run: |
-        sudo apt update
-        sudo apt install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses-dev libtinfo5 cmake libffi-dev libssl-dev patch ccache lld
+        set -e
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends \
+          git zip unzip openjdk-17-jdk autoconf libtool pkg-config \
+          zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev patch ccache lld
         python3 -m pip install --upgrade pip setuptools wheel
-        pip install "buildozer==1.5.0" "cython<3.0.0" kivy
+        pip install "buildozer==1.5.0" "cython<3.0.0" "kivy"
 
     - name: Prepare buildozer.spec
       run: |
+        set -e
+        # Fail fast with a clear message if there's no Python app to package
+        if [ ! -f main.py ]; then
+          echo "::error::main.py not found. Buildozer needs a main.py in the repo root."
+          exit 1
+        fi
+
         if [ ! -f buildozer.spec ]; then
           buildozer init
         fi
 
-        python3 -c "
+        python3 << 'EOF'
         import re
 
         with open('buildozer.spec', 'r') as f:
@@ -61,41 +81,70 @@ jobs:
             replacement = f'{key} = {value}'
             if re.search(pattern, text, flags=re.MULTILINE):
                 return re.sub(pattern, replacement, text, flags=re.MULTILINE)
-            else:
-                return text.rstrip() + f'\n{replacement}\n'
+            return text.rstrip() + f'\n{replacement}\n'
 
-        content = set_key(content, 'requirements', 'python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython')
+        content = set_key(content, 'requirements',
+                          'python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython')
         content = set_key(content, 'log_level', '2')
         content = set_key(content, 'p4a.branch', 'master')
         content = set_key(content, 'android.accept_sdk_license', 'True')
 
         with open('buildozer.spec', 'w') as f:
             f.write(content)
-        "
+        print("buildozer.spec configured successfully.")
+        EOF
 
     - name: Build with Buildozer
+      env:
+        BUILDOZER_LOG: 1
       run: |
+        set +e   # buildozer failure is handled by the retry loop, not the shell
         MAX_TRIES=2
-        for i in $(seq 1 $MAX_TRIES); do
-          echo "=== Tentativa $i de $MAX_TRIES ==="
-          if yes | buildozer -v android debug; then
-            echo "Build concluído com sucesso."
-            exit 0
+        SUCCESS=0
+
+        for i in (seq1"(seq 1 "(seq1"MAX_TRIES"); do
+          echo "=== Attempt iofi ofiofMAX_TRIES ==="
+
+          # Auto-accept licenses; log output; don't let `yes` crash the loop
+          (yes | buildozer -v android debug) > buildozer_build.log 2>&1
+          STATUS=$?
+
+          if [ "$STATUS" -eq 0 ]; then
+            echo "Build succeeded."
+            SUCCESS=1
+            break
           fi
 
-          echo "Build falhou na tentativa $i."
-          if [ "$i" -lt "$MAX_TRIES" ]; then
-            echo "Limpando venvs temporárias do p4a e tentando novamente..."
-            find .buildozer -type d -name venv -path '*build*' -exec rm -rf {} + 2>/dev/null || true
+          echo "Build failed (exit $STATUS). Last 100 log lines:"
+          tail -n 100 buildozer_build.log || true
+
+          if [ "i"−lt"i" -lt "i"−lt"MAX_TRIES" ]; then
+            echo "Cleaning p4a venvs and retrying..."
+            find .buildozer -type d -name venv -path '*build*' \
+              -exec rm -rf {} + 2>/dev/null || true
+            rm -f buildozer_build.log
             sleep 5
           fi
         done
 
-        echo "Build falhou após $MAX_TRIES tentativas."
-        exit 1
+        # Always upload the log so failures are debuggable
+        if [ "$SUCCESS" -ne 1 ]; then
+          echo "::error::Build failed after $MAX_TRIES attempts."
+          tail -n 300 buildozer_build.log 2>/dev/null || true
+          exit 1
+        fi
+
+    - name: Upload Build Log on Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: buildozer-log
+        path: buildozer_build.log
+        if-no-files-found: ignore
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: package
         path: bin/*.apk
+        if-no-files-found: error
