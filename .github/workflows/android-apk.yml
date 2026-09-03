@@ -32,7 +32,7 @@ jobs:
         run: pip install buildozer==1.5.0 "cython<3.0.0"
 
       - name: Check main.py
-        run: ls -la Kix/Kix/main.py
+        run: ls -la Kix/main.py
 
       - name: Prepare buildozer.spec
         run: |
@@ -40,11 +40,11 @@ jobs:
           sed -i "s|^#*requirements *=.*|requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython|" buildozer.spec
           sed -i "s|^#*log_level *=.*|log_level = 2|" buildozer.spec
           sed -i "s|^#*android.accept_sdk_license *=.*|android.accept_sdk_license = True|" buildozer.spec
-          sed -i "s|^#*source.dir *=.*|source.dir = Kix/Kix|" buildozer.spec
+          sed -i "s|^#*source.dir *=.*|source.dir = Kix|" buildozer.spec
           echo "requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython" >> buildozer.spec
           echo "log_level = 2" >> buildozer.spec
           echo "android.accept_sdk_license = True" >> buildozer.spec
-          echo "source.dir = Kix/Kix" >> buildozer.spec
+          echo "source.dir = Kix" >> buildozer.spec
           sort buildozer.spec | uniq > spec.tmp
           mv spec.tmp buildozer.spec
           cat buildozer.spec
