@@ -13,6 +13,51 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Fix broken bundled pip (ensurepip)
+      run: |
+        # O Python deste runner traz, embutido via ensurepip, uma versão do pip
+        # com um bug interno: pip/_internal/build_env/installer.py tenta importar
+        # 'open_rich_spinner' de pip/_internal/cli/spinners.py, mas essa função
+        # não existe lá. Isso quebra TODA venv nova criada com "python -m venv"
+        # (inclusive as que o buildozer/python-for-android cria internamente),
+        # com o erro:
+        #   ImportError: cannot import name 'open_rich_spinner' from 'pip._internal.cli.spinners'
+        #
+        # Corrigimos isso na raiz: trocamos o pacote pip embutido no ensurepip
+        # por uma versão estável conhecida, para que qualquer venv criada
+        # depois (pelo buildozer ou por qualquer outro passo) já nasça correta.
+        set -e
+        NEW_PIP_VERSION="24.3.1"
+
+        ENSUREPIP_DIR=$(python3 -c "import ensurepip, os; print(os.path.dirname(ensurepip.__file__))")
+        BUNDLED_DIR="$ENSUREPIP_DIR/_bundled"
+        echo "Diretório do ensurepip: $ENSUREPIP_DIR"
+        ls -la "$BUNDLED_DIR" || true
+
+        mkdir -p /tmp/pipwheel
+        pip download "pip==$NEW_PIP_VERSION" --no-deps --only-binary=:all: -d /tmp/pipwheel
+        NEW_WHEEL=$(ls /tmp/pipwheel/pip-*.whl)
+        echo "Wheel de pip novo baixado: $NEW_WHEEL"
+
+        rm -f "$BUNDLED_DIR"/pip-*.whl
+        cp "$NEW_WHEEL" "$BUNDLED_DIR/"
+
+        python3 -c "
+        import re
+        path = '$ENSUREPIP_DIR/__init__.py'
+        with open(path) as f:
+            content = f.read()
+        content = re.sub(r'_PIP_VERSION\s*=\s*[\"\']?[^\"\'\n]+[\"\']?', '_PIP_VERSION = \"$NEW_PIP_VERSION\"', content, count=1)
+        with open(path, 'w') as f:
+            f.write(content)
+        "
+
+        # Confere que uma venv nova agora consegue rodar o pip sem erro
+        python3 -m venv /tmp/venv-test
+        /tmp/venv-test/bin/pip --version
+        rm -rf /tmp/venv-test
+        echo "ensurepip corrigido com sucesso."
+
     - name: Install System Dependencies
       run: |
         sudo apt update
