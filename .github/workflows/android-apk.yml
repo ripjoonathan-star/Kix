@@ -1,132 +1,25 @@
 name: Build Android APK
+
 on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Fix broken bundled pip (ensurepip)
-      run: |
-        # O Python deste runner traz, embutido via ensurepip, uma versão do pip
-        # com um bug interno: pip/_internal/build_env/installer.py tenta importar
-        # 'open_rich_spinner' de pip/_internal/cli/spinners.py, mas essa função
-        # não existe lá. Isso quebra TODA venv nova criada com "python -m venv"
-        # (inclusive as que o buildozer/python-for-android cria internamente),
-        # com o erro:
-        #   ImportError: cannot import name 'open_rich_spinner' from 'pip._internal.cli.spinners'
-        #
-        # Corrigimos isso na raiz: trocamos o pacote pip embutido no ensurepip
-        # por uma versão estável conhecida, para que qualquer venv criada
-        # depois (pelo buildozer ou por qualquer outro passo) já nasça correta.
-        set -e
-        NEW_PIP_VERSION="24.3.1"
-
-        ENSUREPIP_DIR=$(python3 -c "import ensurepip, os; print(os.path.dirname(ensurepip.__file__))")
-        BUNDLED_DIR="$ENSUREPIP_DIR/_bundled"
-        echo "Diretório do ensurepip: $ENSUREPIP_DIR"
-        ls -la "$BUNDLED_DIR" || true
-
-        mkdir -p /tmp/pipwheel
-        pip download "pip==$NEW_PIP_VERSION" --no-deps --only-binary=:all: -d /tmp/pipwheel
-        NEW_WHEEL=$(ls /tmp/pipwheel/pip-*.whl)
-        echo "Wheel de pip novo baixado: $NEW_WHEEL"
-
-        rm -f "$BUNDLED_DIR"/pip-*.whl
-        cp "$NEW_WHEEL" "$BUNDLED_DIR/"
-
-        python3 -c "
-        import re
-        path = '$ENSUREPIP_DIR/__init__.py'
-        with open(path) as f:
-            content = f.read()
-        content = re.sub(r'_PIP_VERSION\s*=\s*[\"\']?[^\"\'\n]+[\"\']?', '_PIP_VERSION = \"$NEW_PIP_VERSION\"', content, count=1)
-        with open(path, 'w') as f:
-            f.write(content)
-        "
-
-        # Confere que uma venv nova agora consegue rodar o pip sem erro
-        python3 -m venv /tmp/venv-test
-        /tmp/venv-test/bin/pip --version
-        rm -rf /tmp/venv-test
-        echo "ensurepip corrigido com sucesso."
-
-    - name: Install System Dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev patch
-        pip install --upgrade pip
-        pip install "buildozer==1.5.0" "cython<3.0.0" kivy
-
-    - name: Prepare buildozer.spec
-      run: |
-        if [ ! -f buildozer.spec ]; then
-          buildozer init
-        fi
-
-        # Injeta a correção de versões e força o p4a a usar a branch master,
-        # que já corrige o bug de corrupção do pip na venv temporária
-        # (ImportError: cannot import name 'open_rich_spinner'/'RequirementInformation'
-        # etc. -- ver https://github.com/kivy/python-for-android/pull/3360)
-        python3 -c "
-        with open('buildozer.spec', 'r') as f:
-            lines = f.readlines()
-
-        keys_set = set()
-        with open('buildozer.spec', 'w') as f:
-            for line in lines:
-                stripped = line.strip()
-                if stripped.startswith('requirements ='):
-                    f.write('requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython\n')
-                    keys_set.add('requirements')
-                elif stripped.startswith('log_level ='):
-                    f.write('log_level = 2\n')
-                    keys_set.add('log_level')
-                elif stripped.startswith('#p4a.branch') or stripped.startswith('p4a.branch'):
-                    f.write('p4a.branch = master\n')
-                    keys_set.add('p4a.branch')
-                else:
-                    f.write(line)
-            if 'p4a.branch' not in keys_set:
-                f.write('p4a.branch = master\n')
-        "
+    - name: Checkout
+      uses: actions/checkout@v4
 
     - name: Build with Buildozer
-      run: |
-        # Limpa qualquer cache antigo antes da primeira tentativa
-        rm -rf .buildozer
-        rm -rf ~/.buildozer
+      uses: ArtemSBulgakov/buildozer-action@v1
+      id: buildozer
+      with:
+        command: buildozer -v android debug
+        # Se o seu projeto estiver em subpasta, descomente:
+        # workdir: .
 
-        MAX_TRIES=3
-        for i in $(seq 1 $MAX_TRIES); do
-          echo "### Tentativa de build $i de $MAX_TRIES ###"
-          if yes | buildozer -v android debug; then
-            echo "Build concluído com sucesso."
-            exit 0
-          fi
-
-          echo "Build falhou na tentativa $i."
-          if [ "$i" -lt "$MAX_TRIES" ]; then
-            echo "Limpando venv de build (pode estar corrompida por falha de rede) e tentando de novo..."
-            # Remove só as venvs internas do python-for-android, não o cache inteiro,
-            # pra próxima tentativa ser mais rápida
-            find .buildozer -type d -name venv -path '*build*' -exec rm -rf {} + 2>/dev/null || true
-            sleep 5
-          fi
-        done
-
-        echo "Build falhou após $MAX_TRIES tentativas."
-        exit 1
-
-    - name: Upload APK Artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: package
-        path: bin/*.apk
+        path: ${{ steps.buildozer.outputs.filename }}
