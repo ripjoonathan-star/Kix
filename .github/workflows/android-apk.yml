@@ -50,28 +50,36 @@ jobs:
           pip install --upgrade pip setuptools wheel
           pip install "buildozer==1.5.0" "cython<3.0.0" "kivy"
 
-      - name: Prepare buildozer.spec
+      - name: Locate main.py
+        id: locate
         run: |
-          set -e
           MAIN_PY="$(find . -maxdepth 3 -name main.py -not -path './.git/*' -not -path './.buildozer/*' | head -n1 | sed 's|^\./||')"
           if [ -z "$MAIN_PY" ]; then
             echo "::error::Nenhum main.py encontrado no repositorio."
             exit 1
           fi
           APP_DIR="(dirname"(dirname "(dirname"MAIN_PY")"
-          echo "Entry point: MAINPY(source.dir=MAIN_PY (source.dir =MAINP​Y(source.dir=APP_DIR)"
-          [ -f buildozer.spec ] || buildozer init
-          set_spec() {
-            sed -i "s|^#\?1∗=.∗1 *=.*1∗=.∗|1=1 =1=2|" buildozer.spec
-            grep -q "^1∗="buildozer.spec∣∣echo"1 *=" buildozer.spec || echo "1∗="buildozer.spec∣∣echo"1 = $2" >> buildozer.spec
-          }
-          set_spec "requirements" "python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython"
-          set_spec "log_level" "2"
-          set_spec "p4a.branch" "master"
-          set_spec "android.accept_sdk_license" "True"
-          set_spec "source.dir" "$APP_DIR"
+          echo "appdir=APPDIR">>"APP_DIR" >> "APPD​IR">>"GITHUB_OUTPUT"
+          echo "Entry point: $MAIN_PY"
+
+      - name: Prepare buildozer.spec
+        run: |
+          set -e
+          if [ ! -f buildozer.spec ]; then
+            buildozer init
+          fi
+          sed -i 's|^#*requirements *=.*$|requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython|' buildozer.spec
+          sed -i 's|^#*log_level *=.*$|log_level = 2|' buildozer.spec
+          sed -i 's|^#*p4a.branch *=.*$|p4a.branch = master|' buildozer.spec
+          sed -i 's|^#*android.accept_sdk_license *=.*$|android.accept_sdk_license = True|' buildozer.spec
+          sed -i "s|^#*source.dir *=.*∣source.dir=|source.dir =∣source.dir={{ steps.locate.outputs.appdir }}|" buildozer.spec
+          grep -q '^requirements *=' buildozer.spec || echo 'requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython' >> buildozer.spec
+          grep -q '^log_level *=' buildozer.spec || echo 'log_level = 2' >> buildozer.spec
+          grep -q '^p4a.branch *=' buildozer.spec || echo 'p4a.branch = master' >> buildozer.spec
+          grep -q '^android.accept_sdk_license *=' buildozer.spec || echo 'android.accept_sdk_license = True' >> buildozer.spec
+          grep -q '^source.dir *=' buildozer.spec || echo 'source.dir = ${{ steps.locate.outputs.appdir }}' >> buildozer.spec
           echo "--- buildozer.spec configurado ---"
-          grep -E "^(requirements|log_level|p4a.branch|android.accept_sdk_license|source.dir) *=" buildozer.spec
+          grep -E '^(requirements|log_level|p4a.branch|android.accept_sdk_license|source.dir) *=' buildozer.spec
 
       - name: Build with Buildozer
         run: |
@@ -80,7 +88,7 @@ jobs:
           SUCCESS=0
           for i in (seq1(seq 1(seq1MAX_TRIES); do
             echo "=== Attempt iofi ofiofMAX_TRIES ==="
-            (yes | buildozer -v android debug) > buildozer_build.log 2>&1
+            yes | buildozer -v android debug > buildozer_build.log 2>&1
             if [ $? -eq 0 ]; then
               echo "Build succeeded."
               SUCCESS=1
