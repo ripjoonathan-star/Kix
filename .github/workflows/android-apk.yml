@@ -8,32 +8,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # NOVA ETAPA: Garante o Java correto sem usar o PPA quebrado
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Get Date
-      id: get-date
-      run: |
-        echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-    - name: Cache Buildozer global directory
-      uses: actions/cache@v4
-      with:
-        path: ~/.buildozer
-        key: buildozer-global-${{ runner.os }}-${{ steps.get-date.outputs.date }}
-
-    - name: Cache Buildozer project directory
-      uses: actions/cache@v4
-      with:
-        path: .buildozer
-        key: buildozer-project-${{ runner.os }}-${{ steps.get-date.outputs.date }}
-
     - name: Build with Buildozer
-      uses: ArtemSBulgakov/buildozer-action@v1
+      uses: kivy/buildozer-action@master
       with:
         command: buildozer -v android debug
         repository_root: .
