@@ -29,7 +29,10 @@ jobs:
         run: sudo apt-get update -y && sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev patch ccache
 
       - name: Install Buildozer
-        run: pip install buildozer==1.5.0 "cython<3.0.0"
+        run: |
+          pip install buildozer==1.5.0 "cython<3.0.0"
+          mkdir -p ~/.config/pip
+          echo "[install] ignore-installed = true" > ~/.config/pip/pip.conf
 
       - name: Check main.py
         run: ls -la Kix/main.py
@@ -47,7 +50,9 @@ jobs:
           echo "source.dir = Kix" >> buildozer.spec
           sort buildozer.spec | uniq > spec.tmp
           mv spec.tmp buildozer.spec
-          cat buildozer.spec
+
+      - name: Clean Buildozer venvs
+        run: rm -rf .buildozer ~/.buildozer
 
       - name: Build APK
         run: yes | buildozer -v android debug > buildozer_build.log 2>&1 || tail -n 200 buildozer_build.log && test -f bin/*.apk
