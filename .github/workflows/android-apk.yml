@@ -22,23 +22,18 @@ jobs:
 
     - name: Build with Buildozer
       run: |
-        # Se o arquivo buildozer.spec não existir, cria um básico automaticamente
         if [ ! -f buildozer.spec ]; then
           buildozer init
         fi
         
-        # 1. SOLUÇÃO DEFINITIVA: Trava o Python interno do App e o Python do Servidor na mesma versão estável
-        # Substitui a linha de requirements para injetar python3 e hostpython3 alinhados
+        # 1. Trava as receitas internas na versão estável do Python 3.11
         sed -i 's/requirements = python3==3.11.6,kivy==2.3.1,Pillow==10.4.0,cython==3.0.10/requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython/g' buildozer.spec
         sed -i 's/requirements = python3,kivy/requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython/g' buildozer.spec
         
-        # 2. Configura log detalhado
+        # 2. Configura log detalhado para auditoria
         sed -i 's/log_level = 1/log_level = 2/g' buildozer.spec
         
-        # 3. Limpa pastas residuais antigas que guardaram o Python 3.14 defeituoso
-        buildozer android clean
-        
-        # 4. Executa a compilação
+        # 3. Executa a compilação de forma segura (sem o comando clean)
         yes | buildozer -v android debug
 
     - name: Upload APK Artifact
