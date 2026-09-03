@@ -18,22 +18,33 @@ jobs:
         sudo apt update
         sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev patch
         pip install --upgrade pip
-        pip install "buildozer==1.5.0" kivy cython
+        pip install "buildozer==1.5.0" "cython<3.0.0" kivy
 
     - name: Build with Buildozer
       run: |
+        # Força a limpeza de qualquer cache antigo da pasta do projeto para eliminar o Python 3.14 residual
+        rm -rf .buildozer
+        rm -rf ~/.buildozer
+        
         if [ ! -f buildozer.spec ]; then
           buildozer init
         fi
         
-        # 1. Trava as receitas internas na versão estável do Python 3.11
-        sed -i 's/requirements = python3==3.11.6,kivy==2.3.1,Pillow==10.4.0,cython==3.0.10/requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython/g' buildozer.spec
-        sed -i 's/requirements = python3,kivy/requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython/g' buildozer.spec
+        # Injeta obrigatoriamente a correção de versões no arquivo de configuração
+        python3 -c "
+        with open('buildozer.spec', 'r') as f:
+            lines = f.readlines()
+        with open('buildozer.spec', 'w') as f:
+            for line in lines:
+                if line.strip().startswith('requirements ='):
+                    f.write('requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython\n')
+                elif line.strip().startswith('log_level ='):
+                    f.write('log_level = 2\n')
+                else:
+                    f.write(line)
+        "
         
-        # 2. Configura log detalhado para auditoria
-        sed -i 's/log_level = 1/log_level = 2/g' buildozer.spec
-        
-        # 3. Executa a compilação de forma segura (sem o comando clean)
+        # Executa a compilação limpa respondendo sim para as licenças
         yes | buildozer -v android debug
 
     - name: Upload APK Artifact
