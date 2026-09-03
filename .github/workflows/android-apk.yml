@@ -2,9 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+    branches: "main"
   workflow_dispatch:
 
 jobs:
@@ -19,93 +17,40 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Free up disk space
-        run: |
-          sudo rm -rf /usr/local/lib/android/sdk/ndk-bundle /opt/ghc /usr/local/.ghcup /usr/share/dotnet /opt/hostedtoolcache/CodeQL
-          sudo docker image prune -af || true
-          df -h
-
-      - name: Cache Buildozer & Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.buildozer
-            .buildozer
-            ~/.gradle
-          key: runner.os−buildozer−{{ runner.os }}-buildozer-runner.os−buildozer−{{ hashFiles('buildozer.spec') }}
-          restore-keys: ${{ runner.os }}-buildozer-
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Install System Dependencies
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y --no-install-recommends git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev patch ccache lld
-          pip install --upgrade pip setuptools wheel
-          pip install "buildozer==1.5.0" "cython<3.0.0" "kivy"
+        run: sudo apt-get update -y && sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev patch ccache
 
-      - name: Locate main.py
-        id: locate
-        run: |
-          MAIN_PY="$(find . -maxdepth 3 -name main.py -not -path './.git/*' -not -path './.buildozer/*' | head -n1 | sed 's|^\./||')"
-          if [ -z "$MAIN_PY" ]; then
-            echo "::error::Nenhum main.py encontrado no repositorio."
-            exit 1
-          fi
-          APP_DIR="(dirname"(dirname "(dirname"MAIN_PY")"
-          echo "appdir=APPDIR">>"APP_DIR" >> "APPD​IR">>"GITHUB_OUTPUT"
-          echo "Entry point: $MAIN_PY"
+      - name: Install Buildozer
+        run: pip install buildozer==1.5.0 "cython<3.0.0"
+
+      - name: Check main.py
+        run: ls -la Kix/Kix/main.py
 
       - name: Prepare buildozer.spec
         run: |
-          set -e
-          if [ ! -f buildozer.spec ]; then
-            buildozer init
-          fi
-          sed -i 's|^#*requirements *=.*$|requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython|' buildozer.spec
-          sed -i 's|^#*log_level *=.*$|log_level = 2|' buildozer.spec
-          sed -i 's|^#*p4a.branch *=.*$|p4a.branch = master|' buildozer.spec
-          sed -i 's|^#*android.accept_sdk_license *=.*$|android.accept_sdk_license = True|' buildozer.spec
-          sed -i "s|^#*source.dir *=.*∣source.dir=|source.dir =∣source.dir={{ steps.locate.outputs.appdir }}|" buildozer.spec
-          grep -q '^requirements *=' buildozer.spec || echo 'requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython' >> buildozer.spec
-          grep -q '^log_level *=' buildozer.spec || echo 'log_level = 2' >> buildozer.spec
-          grep -q '^p4a.branch *=' buildozer.spec || echo 'p4a.branch = master' >> buildozer.spec
-          grep -q '^android.accept_sdk_license *=' buildozer.spec || echo 'android.accept_sdk_license = True' >> buildozer.spec
-          grep -q '^source.dir *=' buildozer.spec || echo 'source.dir = ${{ steps.locate.outputs.appdir }}' >> buildozer.spec
-          echo "--- buildozer.spec configurado ---"
-          grep -E '^(requirements|log_level|p4a.branch|android.accept_sdk_license|source.dir) *=' buildozer.spec
+          test -f buildozer.spec || buildozer init
+          sed -i "s|^#*requirements *=.*|requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython|" buildozer.spec
+          sed -i "s|^#*log_level *=.*|log_level = 2|" buildozer.spec
+          sed -i "s|^#*android.accept_sdk_license *=.*|android.accept_sdk_license = True|" buildozer.spec
+          sed -i "s|^#*source.dir *=.*|source.dir = Kix/Kix|" buildozer.spec
+          echo "requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython" >> buildozer.spec
+          echo "log_level = 2" >> buildozer.spec
+          echo "android.accept_sdk_license = True" >> buildozer.spec
+          echo "source.dir = Kix/Kix" >> buildozer.spec
+          sort buildozer.spec | uniq > spec.tmp
+          mv spec.tmp buildozer.spec
+          cat buildozer.spec
 
-      - name: Build with Buildozer
-        run: |
-          set +e
-          MAX_TRIES=2
-          SUCCESS=0
-          for i in (seq1(seq 1(seq1MAX_TRIES); do
-            echo "=== Attempt iofi ofiofMAX_TRIES ==="
-            yes | buildozer -v android debug > buildozer_build.log 2>&1
-            if [ $? -eq 0 ]; then
-              echo "Build succeeded."
-              SUCCESS=1
-              break
-            fi
-            echo "Build failed. Last 100 log lines:"
-            tail -n 100 buildozer_build.log || true
-            if [ "i"−lt"i" -lt "i"−lt"MAX_TRIES" ]; then
-              echo "Cleaning p4a venvs and retrying..."
-              find .buildozer -type d -name venv -path '*build*' -exec rm -rf {} + 2>/dev/null || true
-              sleep 5
-            fi
-          done
-          if [ "$SUCCESS" -ne 1 ]; then
-            echo "::error::Build failed after $MAX_TRIES attempts."
-            exit 1
-          fi
+      - name: Build APK
+        run: yes | buildozer -v android debug > buildozer_build.log 2>&1 || tail -n 200 buildozer_build.log && test -f bin/*.apk
 
       - name: Upload Build Log on Failure
         if: failure()
@@ -115,7 +60,7 @@ jobs:
           path: buildozer_build.log
           if-no-files-found: ignore
 
-      - name: Upload APK Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: package
