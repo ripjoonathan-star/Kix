@@ -22,6 +22,11 @@ jobs:
 
     - name: Build with Buildozer
       run: |
+        # Auto-aceita todas as licenças do Android SDK antes de compilar
+        mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+        echo -e "\n893547d6f52756411d18b265063004029466de46\n45f285d1d674125d03d1da90967e8999419133b3\n24333f1a63b682509d31d4eff98589922a112429\n84831b9409646a918e30573bab4c9c91346d8abd\n35b63c61d265e386e579841efd4d42b93466141a\ne9ac30d0b722fc756754e4e4e7949715d95655da\n9b20b7e9b0612acaf82da6a0d7a1cd1f01c9b5f3" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        
+        # Executa o buildozer
         buildozer -v android debug
 
     - name: Upload APK Artifact
