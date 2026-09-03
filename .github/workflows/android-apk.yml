@@ -16,35 +16,11 @@ jobs:
     - name: Install System Dependencies
       run: |
         sudo apt update
-        sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev wget
+        sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
         pip install --upgrade pip
         pip install buildozer kivy cython
 
     - name: Build with Buildozer
       run: |
-        # 1. Estruturar as pastas do Android SDK esperadas pelo Buildozer
-        mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools
-        
-        # 2. Baixar a versão oficial das cmdline-tools da Google
-        wget -q https://google.com -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip
-        
-        # 3. Mover para a estrutura correta (as ferramentas precisam ficar dentro de uma pasta chamada 'latest')
-        mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest
-        mv cmdline-tools/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
-        
-        # 4. Criar link simbólico para retrocompatibilidade caso o Buildozer busque na pasta legada 'tools'
-        ln -s ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest ~/.buildozer/android/platform/android-sdk/tools
-        
-        # 5. Configurar as licenças da Google antecipadamente
-        mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-        echo -e "\n893547d6f52756411d18b265063004029466de46\n45f285d1d674125d03d1da90967e8999419133b3\n24333f1a63b682509d31d4eff98589922a112429\n84831b9409646a918e30573bab4c9c91346d8abd\n35b63c61d265e386e579841efd4d42b93466141a\ne9ac30d0b722fc756754e4e4e7949715d95655da\n9b20b7e9b0612acaf82da6a0d7a1cd1f01c9b5f3" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-        
-        # 6. Executar a compilação
-        buildozer -v android debug
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: package
-        path: bin/*.apk
+        # Executa o buildozer aceitando todas as licenças do SDK de forma nativa e automática
+        buildozer --accept-sdk-license android debug
