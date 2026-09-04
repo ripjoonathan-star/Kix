@@ -34,29 +34,21 @@ jobs:
       - name: Check main.py
         run: ls -la Kix/main.py
 
-      - name: Prepare buildozer.spec
+      - name: Verify buildozer.spec
         run: |
-          test -f buildozer.spec || buildozer init
-          sed -i "s|^#*requirements *=.*|requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython|" buildozer.spec
-          sed -i "s|^#*log_level *=.*|log_level = 2|" buildozer.spec
-          sed -i "s|^#*android.accept_sdk_license *=.*|android.accept_sdk_license = True|" buildozer.spec
-          sed -i "s|^#*source.dir *=.*|source.dir = Kix|" buildozer.spec
-          echo "requirements = python3==3.11.9,hostpython3==3.11.9,kivy,Pillow,cython" >> buildozer.spec
-          echo "log_level = 2" >> buildozer.spec
-          echo "android.accept_sdk_license = True" >> buildozer.spec
-          echo "source.dir = Kix" >> buildozer.spec
-          sort buildozer.spec | uniq > spec.tmp
-          mv spec.tmp buildozer.spec
+          test -f buildozer.spec
+          grep "source.dir" buildozer.spec
+          grep "requirements" buildozer.spec
 
-            - name: Build APK 
-            run: |
+      - name: Build APK
+        run: |
           yes | buildozer -v android debug > buildozer_build.log 2>&1
           if [ $? -ne 0 ]; then
             echo "=== Primeira tentativa falhou. Limpando venvs e tentando novamente ==="
             find .buildozer -type d -name venv -exec rm -rf {} + 2>/dev/null || true
             yes | buildozer -v android debug > buildozer_build.log 2>&1
           fi
-          echo "=== Fim do log de build (ultimas 80 linhas) ==="
+          echo "=== Fim do log de build ==="
           tail -n 80 buildozer_build.log
           ls -la bin/
           test -f bin/*.apk
