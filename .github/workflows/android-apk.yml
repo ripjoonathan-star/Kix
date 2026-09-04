@@ -48,19 +48,21 @@ jobs:
           sort buildozer.spec | uniq > spec.tmp
           mv spec.tmp buildozer.spec
 
-      - name: Build APK
-        run: |
+            - name: Build APK 
+            run: |
           yes | buildozer -v android debug > buildozer_build.log 2>&1
           if [ $? -ne 0 ]; then
             echo "=== Primeira tentativa falhou. Limpando venvs e tentando novamente ==="
             find .buildozer -type d -name venv -exec rm -rf {} + 2>/dev/null || true
             yes | buildozer -v android debug > buildozer_build.log 2>&1
           fi
+          echo "=== Fim do log de build (ultimas 80 linhas) ==="
+          tail -n 80 buildozer_build.log
           ls -la bin/
           test -f bin/*.apk
 
-      - name: Upload Build Log on Failure
-        if: failure()
+      - name: Upload Build Log
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: buildozer-log
@@ -68,6 +70,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: package
